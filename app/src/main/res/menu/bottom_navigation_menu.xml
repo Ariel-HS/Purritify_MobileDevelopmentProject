@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="@string/home"
+        android:id="@+id/home_page"
+        android:icon="@drawable/home_24"
+        />
+
+    <item android:title="@string/my_library"
+        android:id="@+id/my_library"
+        android:icon="@drawable/my_library_24"
+        />
+
+    <item android:title="@string/profile"
+        android:id="@+id/profile"
+        android:icon="@drawable/profile_24"
+        />
+</menu>
