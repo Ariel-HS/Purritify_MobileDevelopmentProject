@@ -1,0 +1,6 @@
+package com.example.purritify.data.model
+
+data class LoginRequest(
+    val email: String,
+    val password: String
+)
