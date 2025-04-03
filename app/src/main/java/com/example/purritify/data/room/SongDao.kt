@@ -1,0 +1,33 @@
+package com.example.purritify.data.room
+
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.Update
+import androidx.room.Upsert
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface SongDao {
+    @Query("SELECT * FROM song")
+    fun getAll(): Flow<List<Song>>
+
+    @Query("SELECT * FROM song WHERE id IN (:songIds)")
+    fun selectAllByIds(songIds: IntArray): Flow<List<Song>>
+
+    @Query("SELECT * FROM song WHERE title LIKE :title ")
+    fun searchByTitle(title: String): Flow<List<Song>>
+
+    @Query("SELECT * FROM song WHERE artist LIKE :artist ")
+    fun searchByArtist(artist: String): Flow<List<Song>>
+
+    @Query("SELECT * FROM song WHERE liked = 1 ")
+    fun searchLiked(): Flow<List<Song>>
+
+    @Upsert
+    suspend fun upsertSong(song: Song)
+
+    @Delete
+    suspend fun delete(song: Song)
+}

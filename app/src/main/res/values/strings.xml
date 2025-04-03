@@ -14,4 +14,21 @@
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>
+    <string name="settings">Settings</string>
+    <string name="profile_icon">Profile Icon</string>
+    <string name="home_nav_header_profile_image">Home Nav Header Profile Image</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="your_library">Your Library</string>
+    <string name="add_song_button">Add Song Button</string>
+    <string name="all">All</string>
+    <string name="liked">Liked</string>
+    <string name="library_recycler_view_description">Library Recycler View</string>
+    <string name="upload_song">Upload Song</string>
+    <string name="title">Title</string>
+    <string name="artist">Artist</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="upload_photo">Upload Photo</string>
+    <string name="add_song_dialog_duration_text">Duration: %1$s</string>
 </resources>

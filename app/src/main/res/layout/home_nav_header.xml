@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="128dp"
+    android:orientation="vertical"
+    android:gravity="center_vertical"
+    android:padding="@dimen/view_padding"
+    android:background="#121212"
+    >
+    
+    <ImageView
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:contentDescription="@string/home_nav_header_profile_image"
+        android:src="@drawable/profile_24"
+        />
+
+</LinearLayout>

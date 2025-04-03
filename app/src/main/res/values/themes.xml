@@ -11,9 +11,50 @@
         <!-- Set splash screen background -->
         <item name="windowSplashScreenBackground">#121212</item>
         <!-- Add drawable -->
-        <item name="windowSplashScreenAnimatedIcon">@drawable/logo_3_round_200</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen_logo</item>
         <!-- Set the theme of the Activity that follows the splash screen. -->
         <item name="postSplashScreenTheme">@style/Theme.Purritify</item>
+    </style>
+
+    <style name="Theme.Purritify.Starting.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Theme.Purritify.Starting.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="Theme.Purritify.Starting.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="ThemeToolbar" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorControlNormal">@color/white</item>
+    </style>
+
+    <style name="AddSongCardView" parent="@style/Widget.MaterialComponents.CardView">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.MaterialCardView.Cut</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.MaterialCardView.Cut" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopRight">32dp</item>
+        <item name="cornerSizeTopLeft">32dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+    </style>
+
+    <style name="AddSongDialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+        <item name="shapeAppearanceMediumComponent">@style/AddSongDialogBackground</item>
+    </style>
+
+    <style name="AddSongDialogBackground" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopRight">32dp</item>
+        <item name="cornerSizeTopLeft">32dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+    </style>
+
+    <style name="ProgressDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:windowBackground">@android:color/transparent</item>
     </style>
 
 </resources>
