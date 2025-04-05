@@ -1,16 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ProfileFragment"
-    android:background="#123123"
-    >
+    android:background="#000000"
+    android:orientation="vertical"
+    android:padding="16dp">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <!-- Profile Card -->
+    <FrameLayout
+        android:id="@+id/profileCardContainer"
+        android:layout_width="122dp"
+        android:layout_height="175dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="70dp">
+
+        <!--    <include layout="@layout/profile_card"/>-->
+
+    </FrameLayout>
+
+    <!-- Edit Profile Button -->
+    <Button
+        android:id="@+id/editProfileButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/edit_profile"
+        android:textSize="12sp"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:backgroundTint="#3E3F3F"
+        android:layout_marginTop="12dp"
+        android:paddingHorizontal="24dp"
+        android:layout_gravity="center_horizontal"
+        android:minHeight="38dp" />
+
+    <!-- Statistics -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/profileStatisticsContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="60dp"
+        android:layout_marginTop="16dp"
 
-</FrameLayout>
+        app:layout_constraintTop_toBottomOf="@id/editProfileButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Songs -->
+        <FrameLayout
+            android:id="@+id/profileSongsStatistics"
+            android:layout_width="63.13dp"
+            android:layout_height="41.65dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <!-- Liked -->
+        <FrameLayout
+            android:id="@+id/profileLikedStatistics"
+            android:layout_width="63.13dp"
+            android:layout_height="41.65dp"
+            app:layout_constraintStart_toEndOf="@id/profileSongsStatistics"
+            app:layout_constraintEnd_toStartOf="@id/profileListenedStatistics"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <!-- Listened -->
+        <FrameLayout
+            android:id="@+id/profileListenedStatistics"
+            android:layout_width="63.13dp"
+            android:layout_height="41.65dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</LinearLayout>

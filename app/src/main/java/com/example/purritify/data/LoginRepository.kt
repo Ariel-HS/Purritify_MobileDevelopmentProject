@@ -2,6 +2,7 @@ package com.example.purritify.data
 
 import android.util.Log
 import com.example.purritify.data.model.LoggedInUser
+import com.example.purritify.ui.login.TokenManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -10,7 +11,7 @@ import kotlinx.coroutines.withContext
  * maintains an in-memory cache of login status and user credentials information.
  */
 
-class LoginRepository(val dataSource: LoginDataSource) {
+class LoginRepository(val dataSource: LoginDataSource, private val tokenManager: TokenManager) {
 
     // in-memory cache of the loggedInUser object
     var user: LoggedInUser? = null
@@ -38,6 +39,8 @@ class LoginRepository(val dataSource: LoginDataSource) {
 
             if (result is Result.Success) {
                 setLoggedInUser(result.data)
+
+                tokenManager.saveToken(result.data.token)
             }
 
             return@withContext result
