@@ -138,7 +138,7 @@ class HomeFragment : Fragment() {
             marginEnd = (18 * density).toInt()
         }
 
-        loadSongsToContainer(newSongs, binding.newSongContainer, R.layout.song_card, params)
+        loadSongsToContainer(newSongs, binding.newSongContainer, R.layout.home_song_card, params)
     }
 
     private fun loadRecentlyPlayed() {
@@ -149,7 +149,7 @@ class HomeFragment : Fragment() {
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
 
-        loadSongsToContainer(recentlyPlayedSongs, binding.recentlyPlayedContainer, R.layout.song_item, params)
+        loadSongsToContainer(recentlyPlayedSongs, binding.recentlyPlayedContainer, R.layout.library_song_card, params)
     }
 
     private fun loadSongsToContainer(

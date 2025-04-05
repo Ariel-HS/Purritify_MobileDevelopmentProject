@@ -36,4 +36,7 @@
     <string name="song_item_delete_button">Song Item Delete Button</string>
     <string name="song_item_like_button">Like Button</string>
     <string name="edit_profile">Edit Profile</string>
+    <string name="delete_button_title">Are you sure?</string>
+    <string name="delete_button_subtitle">This action cannot be undone</string>
+    <string name="delete_button">Confirm Delete</string>
 </resources>

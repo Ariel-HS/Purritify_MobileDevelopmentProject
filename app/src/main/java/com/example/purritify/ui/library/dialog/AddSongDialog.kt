@@ -1,22 +1,18 @@
-package com.example.purritify.ui.library
+package com.example.purritify.ui.library.dialog
 
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.Dialog
-import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.database.Cursor
 import android.graphics.Color
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.DocumentsContract
-import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -76,6 +72,7 @@ class AddSongDialogFragment(
 
     override fun onCancel(dialog: DialogInterface) {
         onEvent(SongEvent.HideDialog)
+        resetVars()
         super.onCancel(dialog)
     }
 
@@ -85,6 +82,7 @@ class AddSongDialogFragment(
             override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
 
             override fun afterTextChanged(s: Editable) {
+                title = s.toString()
                 onEvent(SongEvent.SetTitle(s.toString()))
             }
         })
@@ -94,24 +92,28 @@ class AddSongDialogFragment(
             override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
 
             override fun afterTextChanged(s: Editable) {
+                artist = s.toString()
                 onEvent(SongEvent.SetArtist(s.toString()))
             }
         })
 
         binding.btnSave.setOnClickListener {
             if (title.isBlank() || artist.isBlank() || pathArtwork.isBlank() || pathFile.isBlank() || duration.isBlank()) {
+                Log.d("AddSongDialog", "Missing Attributes $title $artist $pathArtwork $pathFile $duration")
                 Toast.makeText(requireContext(), "Missing Attributes", Toast.LENGTH_SHORT).show()
+
+                return@setOnClickListener
             }
 
             onEvent(SongEvent.SaveSong)
             onEvent(SongEvent.HideDialog)
-
+            resetVars()
             dismiss()
         }
 
         binding.btnCancel.setOnClickListener {
             onEvent(SongEvent.HideDialog)
-
+            resetVars()
             dismiss()
         }
 
@@ -142,7 +144,7 @@ class AddSongDialogFragment(
 
                         binding.uploadPhotoButton.setImageURI(imageURI)
                         onEvent(SongEvent.SetPathArtwork(imageURI.toString()))
-
+                        pathArtwork = imageURI.toString()
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -277,6 +279,7 @@ class AddSongDialogFragment(
                         if (duration.toString().isNotEmpty()) {
                             binding.durationTextView.text = getString(R.string.add_song_dialog_duration_text, duration)
                             onEvent(SongEvent.SetDuration(duration.toString()))
+                            this.duration = duration.toString()
                         } else {
                             binding.durationTextView.text = getString(R.string.add_song_dialog_duration_text, "Unknown")
                         }
@@ -286,6 +289,7 @@ class AddSongDialogFragment(
                         Log.d("TEST", metadataRetriever.toString())
 
                         onEvent(SongEvent.SetPathFile(audioURI.toString()))
+                        pathFile = audioURI.toString()
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -332,5 +336,13 @@ class AddSongDialogFragment(
         }
 
         pickAudio()
+    }
+
+    private fun resetVars() {
+        title = ""
+        artist = ""
+        pathArtwork = ""
+        pathFile = ""
+        duration = ""
     }
 }

@@ -12,8 +12,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.purritify.R
 import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDatabase
-import com.example.purritify.databinding.SongItemBinding
 import androidx.core.net.toUri
+import com.example.purritify.databinding.LibrarySongCardBinding
 import java.io.File
 import kotlin.coroutines.coroutineContext
 
@@ -32,7 +32,7 @@ class SongAdapter(
     }
 
     class ViewHolder(
-        private val view: SongItemBinding,
+        private val view: LibrarySongCardBinding,
         private val listener: ItemClickListener
     ) : RecyclerView.ViewHolder(view.root) {
         val title = view.songTitle
@@ -52,17 +52,21 @@ class SongAdapter(
                 }
 
                 if (song.liked) {
-                    likeButton.setBackgroundResource(R.drawable.liked_24)
+                    likeButton.setImageResource(R.drawable.liked_24)
                 } else {
-                    likeButton.setBackgroundResource(R.drawable.like_plus_circle_24)
+                    likeButton.setImageResource(R.drawable.like_plus_circle_24)
                 }
 
                 likeButton.setOnClickListener {
                     listener.onLikeButtonClickListener(song)
                 }
 
-                moreButton.setOnClickListener {
-                    listener.onMoreButtonClickListener(song)
+                deleteButton.setOnClickListener {
+                    listener.onDeleteButtonClickListener(song)
+                }
+
+                editButton.setOnClickListener {
+                    listener.onEditButtonClickListener(song)
                 }
             }
         }
@@ -71,7 +75,7 @@ class SongAdapter(
     // Create new views (invoked by the layout manager)
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): SongAdapter.ViewHolder {
         // Create a new view, which defines the UI of the list item
-        val view = SongItemBinding.inflate(LayoutInflater.from(viewGroup.context), viewGroup, false)
+        val view = LibrarySongCardBinding.inflate(LayoutInflater.from(viewGroup.context), viewGroup, false)
 
         return ViewHolder(view, listener)
     }
@@ -90,6 +94,7 @@ class SongAdapter(
     interface ItemClickListener {
         fun onItemClickListener(song: Song)
         fun onLikeButtonClickListener(song: Song)
-        fun onMoreButtonClickListener(song: Song)
+        fun onDeleteButtonClickListener(song: Song)
+        fun onEditButtonClickListener(song: Song)
     }
 }

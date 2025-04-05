@@ -1,0 +1,371 @@
+package com.example.purritify.ui.library.dialog
+
+import android.Manifest
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.AlertDialog
+import android.app.Dialog
+import android.content.DialogInterface
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Color
+import android.media.MediaMetadataRetriever
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.Toast
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.net.toUri
+import androidx.fragment.app.DialogFragment
+import com.example.purritify.R
+import com.example.purritify.data.room.Song
+import com.example.purritify.data.room.SongEvent
+import com.example.purritify.databinding.DialogAddSongBinding
+import com.example.purritify.databinding.DialogEditSongBinding
+
+class EditSongDialogFragment(
+    private val onEvent: (SongEvent) -> Unit,
+    private val song: Song
+): DialogFragment() {
+
+    private lateinit var binding: DialogEditSongBinding
+    private lateinit var imageResultLauncher: ActivityResultLauncher<Intent>
+    private lateinit var requestImagePermissionLauncher: ActivityResultLauncher<Array<String>>
+
+    private lateinit var audioResultLauncher: ActivityResultLauncher<Intent>
+    private lateinit var requestAudioPermissionLauncher: ActivityResultLauncher<Array<String>>
+
+    private var title: String = ""
+    private var artist: String = ""
+    private var pathArtwork: String = ""
+    private var pathFile: String = ""
+    private var duration: String = ""
+
+    @SuppressLint("UseGetLayoutInflater")
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        super.onCreateDialog(savedInstanceState)
+
+        binding = DialogEditSongBinding.inflate(LayoutInflater.from(context))
+
+        setupVars()
+        setupViews()
+        setupListeners()
+
+        registerImageResultLauncher()
+        registerImageRequestPermissionLauncher()
+        registerAudioResultLauncher()
+        registerAudioRequestPermissionLauncher()
+
+        val dialog = AlertDialog.Builder(requireActivity(), R.style.ProgressDialogTheme)
+            .setView(binding.root)
+            .create()
+
+        val window = dialog.window
+//        window?.setGravity(Gravity.BOTTOM)
+        window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+
+        return dialog
+    }
+
+    private fun setupListeners() {
+        binding.titleInput.addTextChangedListener( object : TextWatcher {
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+            override fun afterTextChanged(s: Editable) {
+                title = s.toString()
+            }
+        })
+
+        binding.artistInput.addTextChangedListener( object : TextWatcher {
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+            override fun afterTextChanged(s: Editable) {
+                artist = s.toString()
+            }
+        })
+
+        binding.btnSave.setOnClickListener {
+            if (title.isBlank() || artist.isBlank() || pathArtwork.isBlank() || pathFile.isBlank() || duration.isBlank()) {
+                Toast.makeText(requireContext(), "Missing Attributes", Toast.LENGTH_SHORT).show()
+
+                return@setOnClickListener
+            }
+
+            onEvent(SongEvent.UpsertSong(song.copy(
+                title = title,
+                artist = artist,
+                pathArtwork = pathArtwork,
+                pathFile = pathFile,
+                duration = duration)
+            ))
+
+            resetVars()
+
+            dismiss()
+        }
+
+        binding.btnCancel.setOnClickListener {
+
+            resetVars()
+
+            dismiss()
+        }
+
+        binding.uploadPhotoButton.setOnClickListener {
+            Log.d("CHECK", "CLICK")
+            checkStoragePermissionImage()
+        }
+
+        binding.uploadFileButton.setOnClickListener {
+            Log.d("CHECK", "CLICK")
+            checkStoragePermissionAudio()
+        }
+    }
+
+    private fun registerImageResultLauncher() {
+        imageResultLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result: ActivityResult ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                try {
+                    val imageURI = result.data?.data
+                    Log.d("CHECK ARTWORK", imageURI.toString())
+                    if (imageURI != null) {
+                        requireContext().contentResolver.takePersistableUriPermission(
+                            imageURI,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+
+                        binding.uploadPhotoButton.setImageURI(imageURI)
+                        pathArtwork = imageURI.toString()
+
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    private fun registerImageRequestPermissionLauncher() {
+        requestImagePermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions: Map<String, Boolean> ->
+            if (!isAdded) {
+                Log.d("CHECK", "not added fail")
+            }
+
+            val allGranted = permissions.all { it.value }
+
+            if (allGranted) {
+                pickImage()
+            } else {
+                Log.d("CHECK", "not all permissions granted: $permissions")
+                // TODO Show Toast Message
+            }
+        }
+    }
+
+    private fun pickImage() {
+        try {
+            val galleryIntent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+            galleryIntent.type = "image/*"
+            galleryIntent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+            galleryIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+            imageResultLauncher.launch(galleryIntent)
+        } catch (e: Exception) {
+            // TODO MAKE TOAST
+            e.printStackTrace()
+        }
+    }
+
+    private fun checkStoragePermissionImage() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            Log.d("CHECK", "SDK 34")
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
+                != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_IMAGES)
+                != PackageManager.PERMISSION_GRANTED) {
+                Log.d("CHECK", "NOT GRANTED")
+//                ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED), 1)
+                requestImagePermissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED))
+
+                return
+            }
+
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_IMAGES)
+                != PackageManager.PERMISSION_GRANTED) {
+                Log.d("CHECK", "NOT GRANTED")
+//                ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED), 1)
+                requestImagePermissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_IMAGES))
+
+                return
+            }
+        } else {
+            Log.d("CHECK", "SDK else")
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+                Log.d("CHECK", "NOT GRANTED")
+//                ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 1)
+                requestImagePermissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
+
+                return
+            }
+
+        }
+
+        pickImage()
+    }
+
+    private fun registerAudioRequestPermissionLauncher() {
+        requestAudioPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions: Map<String, Boolean> ->
+            if (!isAdded) {
+                Log.d("CHECK", "not added fail")
+            }
+
+            val allGranted = permissions.all { it.value }
+
+            if (allGranted) {
+                pickAudio()
+            } else {
+                Log.d("CHECK", "not all permissions granted: $permissions")
+                // TODO Show Toast Message
+            }
+        }
+    }
+
+    private fun registerAudioResultLauncher() {
+        audioResultLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result: ActivityResult ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                try {
+                    val audioURI: Uri? = result.data?.data
+                    Log.d("CHECK FILE", audioURI.toString())
+                    if (audioURI != null) {
+                        requireContext().contentResolver.takePersistableUriPermission(
+                            audioURI,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+
+                        val metadataRetriever = MediaMetadataRetriever()
+                        metadataRetriever.setDataSource(requireContext(), audioURI)
+
+                        val title = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
+                        Log.d("CHECK TITLE", title.toString())
+                        if (title.toString().isNotEmpty()) {
+                            binding.titleInput.setText(title)
+                            this.title = title.toString()
+                        }
+
+                        val artist = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
+                        Log.d("CHECK ARTIST", artist.toString())
+                        if (artist.toString().isNotEmpty()) {
+                            binding.artistInput.setText(artist)
+                            this.artist = artist.toString()
+                        }
+
+                        val duration = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                        Log.d("CHECK DURATION", duration.toString())
+                        if (duration.toString().isNotEmpty()) {
+                            binding.durationTextView.text = getString(R.string.add_song_dialog_duration_text, duration)
+                            this.duration = duration.toString()
+                        } else {
+                            binding.durationTextView.text = getString(R.string.add_song_dialog_duration_text, "Unknown")
+                        }
+
+                        binding.durationTextView.visibility = View.VISIBLE
+
+                        Log.d("TEST", metadataRetriever.toString())
+                        pathFile = audioURI.toString()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    private fun pickAudio() {
+        try {
+            val audioIntent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+            audioIntent.type = "audio/*"
+            audioIntent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+            audioIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+            audioResultLauncher.launch(audioIntent)
+        } catch (e: Exception) {
+            // TODO MAKE TOAST
+            e.printStackTrace()
+        }
+    }
+
+    private fun checkStoragePermissionAudio() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+                Log.d("CHECK", "NOT GRANTED")
+//                ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED), 1)
+                requestAudioPermissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_AUDIO))
+
+                return
+            }
+        } else {
+            Log.d("CHECK", "SDK else")
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+                Log.d("CHECK", "NOT GRANTED")
+//                ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 1)
+                requestAudioPermissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
+
+                return
+            }
+
+        }
+
+        pickAudio()
+    }
+
+    private fun setupViews() {
+        try {
+            binding.uploadPhotoButton.setImageURI(song.pathArtwork.toUri())
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "Failed to load image: ${e.message}", Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+        }
+
+        binding.titleInput.setText(song.title)
+        binding.artistInput.setText(song.artist)
+        binding.durationTextView.text = getString(R.string.add_song_dialog_duration_text, song.duration)
+    }
+
+    private fun setupVars() {
+        title = song.title
+        artist = song.artist
+        pathArtwork = song.pathArtwork
+        pathFile = song.pathFile
+        duration = song.duration
+    }
+
+    private fun resetVars() {
+        title = ""
+        artist = ""
+        pathArtwork = ""
+        pathFile = ""
+        duration = ""
+    }
+}

@@ -6,8 +6,6 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -15,12 +13,13 @@ import androidx.room.Room
 import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDatabase
 import com.example.purritify.data.room.SongEvent
-import com.example.purritify.databinding.FragmentHomeBinding
 import com.example.purritify.databinding.FragmentMyLibraryBinding
-import com.example.purritify.ui.library.AddSongDialogFragment
+import com.example.purritify.ui.library.dialog.AddSongDialogFragment
 import com.example.purritify.ui.library.SongAdapter
 import com.example.purritify.ui.library.SongViewModel
 import com.example.purritify.ui.library.SongViewModelFactory
+import com.example.purritify.ui.library.dialog.DeleteSongDialogFragment
+import com.example.purritify.ui.library.dialog.EditSongDialogFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -77,7 +76,7 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            songViewModel.state.collectLatest { state ->
+            songViewModel.state.collect { state ->
                 val songs = state.songs
                 if (songs is List<*> && songs.all { it is Song }) {
                     Log.d("MyLibraryFragment Check Song", songs.toString())
@@ -118,6 +117,18 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
         }.show(parentFragmentManager, "AddSongDialog")
     }
 
+    private fun showDeleteSongDialog(song: Song) {
+        DeleteSongDialogFragment({
+                event -> songViewModel.onEvent(event)
+        }, song).show(parentFragmentManager, "DeleteSongDialog")
+    }
+
+    private fun showEditSongDialog(song: Song) {
+        EditSongDialogFragment({
+                event -> songViewModel.onEvent(event)
+        }, song).show(parentFragmentManager, "DeleteSongDialog")
+    }
+
     companion object {
         /**
          * Use this factory method to create a new instance of
@@ -139,7 +150,7 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
     }
 
     override fun onItemClickListener(song: Song) {
-        // TODO("Not yet implemented")
+        TODO("Not yet implemented")
     }
 
     override fun onLikeButtonClickListener(song: Song) {
@@ -147,8 +158,11 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
         songViewModel.onEvent(SongEvent.UpsertSong(updatedSong))
     }
 
-    override fun onMoreButtonClickListener(song: Song) {
-        // TODO("Not yet implemented")
-        // showEditDialog()
+    override fun onDeleteButtonClickListener(song: Song) {
+        showDeleteSongDialog(song)
+    }
+
+    override fun onEditButtonClickListener(song: Song) {
+        showEditSongDialog(song)
     }
 }
