@@ -14,6 +14,7 @@ import android.widget.TextView
 import android.widget.LinearLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.room.Room
 import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDatabase
 import com.example.purritify.ui.library.SongViewModel
@@ -56,7 +57,11 @@ class HomeFragment : Fragment() {
         // Get songs
         val context = requireContext().applicationContext
 
-        songDatabase = SongDatabase.getInstance(context)
+        songDatabase = Room.databaseBuilder(
+            requireContext(),
+            SongDatabase::class.java,
+            "songs.db"
+        ).build()
 
         songViewModel = ViewModelProvider(
             this,
