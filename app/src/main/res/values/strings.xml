@@ -31,4 +31,6 @@
     <string name="cancel">Cancel</string>
     <string name="upload_photo">Upload Photo</string>
     <string name="add_song_dialog_duration_text">Duration: %1$s</string>
+    <string name="new_songs">New Songs</string>
+    <string name="recently_played">Recently Played</string>
 </resources>

@@ -26,6 +26,7 @@ roomCompiler = "2.7.0-rc03"
 roomKtx = "2.7.0-rc03"
 kotlinGradlePlugin = "2.1.10"
 ksp = "2.1.10-1.0.31"
+roomCommon = "2.6.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version = "1.13.1" }
@@ -51,6 +52,7 @@ androidx-media3-common-ktx = { group = "androidx.media3", name = "media3-common-
 logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "loggingInterceptor" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomCompiler" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
+androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

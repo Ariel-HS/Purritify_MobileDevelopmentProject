@@ -10,5 +10,5 @@ data class SongState(
     val pathFile: String = "",
     val duration: String = "",
     val isAddingSong: Boolean = false,
-    val isFilterLiked: Boolean = false
+    val isFilterLiked: Boolean = false,
 )

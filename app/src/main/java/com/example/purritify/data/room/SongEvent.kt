@@ -15,4 +15,6 @@ sealed interface SongEvent {
     data class IsFilterLiked(val liked: Boolean): SongEvent
 
     data class DeleteSong(val song: Song): SongEvent
+
+    data class UpdateLastPlayed(val song: Song) : SongEvent;
 }
