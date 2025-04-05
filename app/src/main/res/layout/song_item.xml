@@ -25,6 +25,7 @@
         app:layout_constraintStart_toEndOf="@+id/songArtwork"
         app:layout_constraintTop_toTopOf="parent"
         android:textStyle="bold"
+        android:textColor="@color/white"
         />
 
     <TextView
@@ -34,6 +35,31 @@
         android:layout_marginStart="@dimen/view_margin"
         android:text="TextView"
         app:layout_constraintStart_toEndOf="@+id/songArtwork"
-        app:layout_constraintTop_toBottomOf="@+id/songTitle" />
+        app:layout_constraintTop_toBottomOf="@+id/songTitle"
+        android:textColor="@color/white"
+        />
+
+    <ImageButton
+        android:id="@+id/likeButton"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_margin="20dp"
+        android:background="@drawable/like_plus_circle_24"
+        android:clickable="true"
+        android:contentDescription="@string/song_item_like_button"
+        app:layout_constraintEnd_toStartOf="@+id/moreButton"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/moreButton"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:clickable="true"
+        android:layout_margin="20dp"
+        android:contentDescription="@string/song_item_delete_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@drawable/baseline_more_vert_24"
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

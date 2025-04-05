@@ -33,4 +33,6 @@
     <string name="add_song_dialog_duration_text">Duration: %1$s</string>
     <string name="new_songs">New Songs</string>
     <string name="recently_played">Recently Played</string>
+    <string name="song_item_delete_button">Song Item Delete Button</string>
+    <string name="song_item_like_button">Like Button</string>
 </resources>

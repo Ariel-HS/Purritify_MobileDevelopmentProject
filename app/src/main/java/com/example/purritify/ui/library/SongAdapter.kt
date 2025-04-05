@@ -1,15 +1,21 @@
 package com.example.purritify.ui.library
 
 import android.content.ClipData.Item
+import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.purritify.R
 import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDatabase
 import com.example.purritify.databinding.SongItemBinding
+import androidx.core.net.toUri
+import java.io.File
+import kotlin.coroutines.coroutineContext
 
 class SongAdapter(
     private val listener: ItemClickListener
@@ -38,7 +44,26 @@ class SongAdapter(
                 title.text = song.title
                 artist.text = song.artist
 
-                // TODO("SETUP ARTWORK IMAGE")
+                try {
+                    artwork.setImageURI(song.pathArtwork.toUri())
+                } catch (e: Exception) {
+                    Toast.makeText(itemView.context, "Failed to load image: ${e.message}", Toast.LENGTH_SHORT).show()
+                    e.printStackTrace()
+                }
+
+                if (song.liked) {
+                    likeButton.setBackgroundResource(R.drawable.liked_24)
+                } else {
+                    likeButton.setBackgroundResource(R.drawable.like_plus_circle_24)
+                }
+
+                likeButton.setOnClickListener {
+                    listener.onLikeButtonClickListener(song)
+                }
+
+                moreButton.setOnClickListener {
+                    listener.onMoreButtonClickListener(song)
+                }
             }
         }
     }
@@ -64,5 +89,7 @@ class SongAdapter(
 
     interface ItemClickListener {
         fun onItemClickListener(song: Song)
+        fun onLikeButtonClickListener(song: Song)
+        fun onMoreButtonClickListener(song: Song)
     }
 }

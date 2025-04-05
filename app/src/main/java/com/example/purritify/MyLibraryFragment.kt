@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -139,5 +140,15 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
 
     override fun onItemClickListener(song: Song) {
         // TODO("Not yet implemented")
+    }
+
+    override fun onLikeButtonClickListener(song: Song) {
+        val updatedSong = song.copy(liked = !song.liked)
+        songViewModel.onEvent(SongEvent.UpsertSong(updatedSong))
+    }
+
+    override fun onMoreButtonClickListener(song: Song) {
+        // TODO("Not yet implemented")
+        // showEditDialog()
     }
 }

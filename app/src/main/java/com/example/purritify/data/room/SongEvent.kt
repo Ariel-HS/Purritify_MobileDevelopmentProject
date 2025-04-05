@@ -17,4 +17,5 @@ sealed interface SongEvent {
     data class DeleteSong(val song: Song): SongEvent
 
     data class UpdateLastPlayed(val song: Song) : SongEvent;
+    data class UpsertSong(val song: Song): SongEvent
 }

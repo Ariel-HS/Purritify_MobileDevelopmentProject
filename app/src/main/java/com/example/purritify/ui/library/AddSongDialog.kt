@@ -9,33 +9,29 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
+import android.database.Cursor
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.DocumentsContract
+import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.Toast
 import androidx.activity.result.ActivityResult
-import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.DialogFragment
-import com.example.purritify.data.room.Song
+import com.example.purritify.R
 import com.example.purritify.data.room.SongEvent
 import com.example.purritify.databinding.DialogAddSongBinding
-import com.google.android.material.internal.TextWatcherAdapter
-import okhttp3.internal.idn.binarySearch
-import androidx.core.graphics.drawable.toDrawable
-import com.example.purritify.R
 
 class AddSongDialogFragment(
     private val onEvent: (SongEvent) -> Unit
@@ -47,6 +43,12 @@ class AddSongDialogFragment(
 
     private lateinit var audioResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var requestAudioPermissionLauncher: ActivityResultLauncher<Array<String>>
+
+    private var title: String = ""
+    private var artist: String = ""
+    private var pathArtwork: String = ""
+    private var pathFile: String = ""
+    private var duration: String = ""
 
     @SuppressLint("UseGetLayoutInflater")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -65,7 +67,9 @@ class AddSongDialogFragment(
             .setView(binding.root)
             .create()
 
-        dialog.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+        val window = dialog.window
+//        window?.setGravity(Gravity.BOTTOM)
+        window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
 
         return dialog
     }
@@ -95,6 +99,10 @@ class AddSongDialogFragment(
         })
 
         binding.btnSave.setOnClickListener {
+            if (title.isBlank() || artist.isBlank() || pathArtwork.isBlank() || pathFile.isBlank() || duration.isBlank()) {
+                Toast.makeText(requireContext(), "Missing Attributes", Toast.LENGTH_SHORT).show()
+            }
+
             onEvent(SongEvent.SaveSong)
             onEvent(SongEvent.HideDialog)
 
@@ -125,10 +133,13 @@ class AddSongDialogFragment(
             if (result.resultCode == Activity.RESULT_OK) {
                 try {
                     val imageURI = result.data?.data
+                    Log.d("CHECK ARTWORK", imageURI.toString())
                     if (imageURI != null) {
-                        if (!(this::binding.isInitialized && isAdded)) {
-                            Log.d("CHECK", "binding fail")
-                        }
+                        requireContext().contentResolver.takePersistableUriPermission(
+                            imageURI,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+
                         binding.uploadPhotoButton.setImageURI(imageURI)
                         onEvent(SongEvent.SetPathArtwork(imageURI.toString()))
 
@@ -161,8 +172,10 @@ class AddSongDialogFragment(
 
     private fun pickImage() {
         try {
-            val galleryIntent = Intent(Intent.ACTION_PICK)
+            val galleryIntent = Intent(Intent.ACTION_OPEN_DOCUMENT)
             galleryIntent.type = "image/*"
+            galleryIntent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+            galleryIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
             imageResultLauncher.launch(galleryIntent)
         } catch (e: Exception) {
@@ -235,28 +248,42 @@ class AddSongDialogFragment(
             if (result.resultCode == Activity.RESULT_OK) {
                 try {
                     val audioURI: Uri? = result.data?.data
+                    Log.d("CHECK FILE", audioURI.toString())
                     if (audioURI != null) {
-                        if (!(this::binding.isInitialized && isAdded)) {
-                            Log.d("CHECK", "binding fail")
-                        }
+                        requireContext().contentResolver.takePersistableUriPermission(
+                            audioURI,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
 
                         val metadataRetriever = MediaMetadataRetriever()
                         metadataRetriever.setDataSource(requireContext(), audioURI)
 
                         val title = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
-                        val artist = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
-                        val duration = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-
                         Log.d("CHECK TITLE", title.toString())
+                        if (title.toString().isNotEmpty()) {
+                            binding.titleInput.setText(title)
+                            onEvent(SongEvent.SetTitle(title.toString()))
+                        }
+
+                        val artist = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
                         Log.d("CHECK ARTIST", artist.toString())
+                        if (artist.toString().isNotEmpty()) {
+                            binding.artistInput.setText(artist)
+                            onEvent(SongEvent.SetArtist(artist.toString()))
+                        }
+
+                        val duration = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
                         Log.d("CHECK DURATION", duration.toString())
+                        if (duration.toString().isNotEmpty()) {
+                            binding.durationTextView.text = getString(R.string.add_song_dialog_duration_text, duration)
+                            onEvent(SongEvent.SetDuration(duration.toString()))
+                        } else {
+                            binding.durationTextView.text = getString(R.string.add_song_dialog_duration_text, "Unknown")
+                        }
+
+                        binding.durationTextView.visibility = View.VISIBLE
 
                         Log.d("TEST", metadataRetriever.toString())
-
-                        binding.titleInput.setText(title)
-                        binding.artistInput.setText(artist)
-                        binding.durationTextView.text = getString(R.string.add_song_dialog_duration_text, duration)
-                        binding.durationTextView.visibility = View.VISIBLE
 
                         onEvent(SongEvent.SetPathFile(audioURI.toString()))
                     }
@@ -269,8 +296,10 @@ class AddSongDialogFragment(
 
     private fun pickAudio() {
         try {
-            val audioIntent = Intent(Intent.ACTION_GET_CONTENT)
+            val audioIntent = Intent(Intent.ACTION_OPEN_DOCUMENT)
             audioIntent.type = "audio/*"
+            audioIntent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+            audioIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
             audioResultLauncher.launch(audioIntent)
         } catch (e: Exception) {

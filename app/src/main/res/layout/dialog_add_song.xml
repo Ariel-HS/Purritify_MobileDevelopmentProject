@@ -7,9 +7,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_gravity="bottom"
     app:cardBackgroundColor="#212121"
-    style="@style/AddSongCardView"
     app:strokeWidth="0dp"
     >
+    <!--    style="@style/AddSongCardView"-->
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"

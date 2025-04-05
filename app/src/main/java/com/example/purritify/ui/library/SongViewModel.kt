@@ -95,6 +95,11 @@ class SongViewModel(
                     dao.delete(event.song)
                 }
             }
+            is SongEvent.UpsertSong -> {
+                viewModelScope.launch {
+                    dao.upsertSong(event.song)
+                }
+            }
             SongEvent.HideDialog -> {
                 _state.update { it.copy(
                     isAddingSong = false
@@ -111,7 +116,7 @@ class SongViewModel(
                 val pathFile = state.value.pathFile
                 val duration = state.value.duration
 
-                if (title.isBlank() || artist.isBlank() || pathArtwork.isBlank() || pathFile.isBlank()) {
+                if (title.isBlank() || artist.isBlank() || pathArtwork.isBlank() || pathFile.isBlank() || duration.isBlank()) {
                     Log.d("SongViewModel", "SOMETHING'S BLANK $title, $artist, $pathArtwork, $pathFile")
                     // TODO Create Toast (and Handle Duration maybe?)
                     return
