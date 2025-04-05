@@ -149,6 +149,7 @@
                 android:layout_marginEnd="4dp"
                 android:layout_weight="1"
                 android:backgroundTint="#424242"
+                android:textColor="@color/white"
                 android:text="@string/cancel" />
 
             <Button
@@ -159,6 +160,7 @@
                 android:layout_marginStart="4dp"
                 android:layout_weight="1"
                 android:backgroundTint="#1DB954"
+                android:textColor="@color/white"
                 android:text="@string/save" />
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>

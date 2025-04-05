@@ -1,6 +1,5 @@
 package com.example.purritify
 
-import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -15,6 +14,7 @@ import android.widget.TextView
 import android.widget.LinearLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.room.Room
 import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDatabase
 import com.example.purritify.ui.library.SongViewModel
@@ -36,7 +36,9 @@ class HomeFragment : Fragment() {
     private lateinit var binding: FragmentHomeBinding
 
     private lateinit var songDatabase: SongDatabase
+
     private lateinit var songViewModel: SongViewModel
+
     private var newSongs: List<Song> = emptyList()
     private var recentlyPlayedSongs: List<Song> = emptyList()
 
@@ -44,18 +46,54 @@ class HomeFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // Inflate the layout for this fragment
         binding = FragmentHomeBinding.inflate(inflater, container, false)
-
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Load songs from database
+        // Get songs
         val context = requireContext().applicationContext
 
-        getSongs(context)
+        songDatabase = Room.databaseBuilder(
+            requireContext(),
+            SongDatabase::class.java,
+            "songs.db"
+        ).build()
+
+        songViewModel = ViewModelProvider(
+            this,
+            SongViewModelFactory(songDatabase.songDao)
+        )[SongViewModel::class.java]
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            launch {
+                songViewModel.newSongsState.collect { state ->
+                    val songs = state.songs
+                    if (songs is List<*> && songs.all {it is Song}) {
+                        @Suppress("UNCHECKED_CAST")
+                        newSongs = songs as List<Song>
+
+                        loadNewSongs()
+                    }
+                }
+            }
+
+            launch {
+                songViewModel.recentlyPlayedState.collect { state ->
+                    val songs = state.songs
+                    if (songs is List<*> && songs.all {it is Song}) {
+                        @Suppress("UNCHECKED_CAST")
+                        recentlyPlayedSongs = songs as List<Song>
+
+                        loadRecentlyPlayed()
+                    }
+
+                }
+            }
+        }
 
         // Toolbar & Navigation
         purritifyToolbar()
@@ -87,59 +125,31 @@ class HomeFragment : Fragment() {
     private fun purritifyToolbar() {
         val toolbar = binding.homeToolbar
 
-        // toolbar.setNavigationIcon(R.drawable)
+//         toolbar.setNavigationIcon(R.drawable)
     }
 
-    private fun getSongs(context: Context) {
+    private fun loadNewSongs() {
         val density = resources.displayMetrics.density
 
-        songDatabase = SongDatabase.getInstance(context)
-
-        songViewModel = ViewModelProvider(
-            this,
-            SongViewModelFactory(songDatabase.songDao)
-        )[SongViewModel::class.java]
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            // Load new songs
-            launch {
-                songViewModel.newSongsState.collect { state ->
-                    val songs = state.songs
-                    if (songs is List<*> && songs.all {it is Song}) {
-                        @Suppress("UNCHECKED_CAST")
-                        newSongs = songs as List<Song>
-
-                        val params = LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT
-                        ).apply {
-                            marginEnd = (18 * density).toInt()
-                        }
-
-                        loadSongsToContainer(newSongs, binding.newSongContainer, R.layout.song_card, params, maxCount = 10)
-                    }
-                }
-            }
-
-            // Load recently played
-            launch {
-                songViewModel.recentlyPlayedState.collect { state ->
-                    val songs = state.songs
-                    if (songs is List<*> && songs.all {it is Song}) {
-                        @Suppress("UNCHECKED_CAST")
-                        recentlyPlayedSongs = songs as List<Song>
-
-                        val params = LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT
-                        )
-
-                        loadSongsToContainer(recentlyPlayedSongs, binding.recentlyPlayedContainer, R.layout.song_item, params)
-                    }
-
-                }
-            }
+        val params = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            marginEnd = (18 * density).toInt()
         }
+
+        loadSongsToContainer(newSongs, binding.newSongContainer, R.layout.song_card, params)
+    }
+
+    private fun loadRecentlyPlayed() {
+        val density = resources.displayMetrics.density
+
+        val params = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        loadSongsToContainer(recentlyPlayedSongs, binding.recentlyPlayedContainer, R.layout.song_item, params)
     }
 
     private fun loadSongsToContainer(
@@ -147,12 +157,11 @@ class HomeFragment : Fragment() {
         container: LinearLayout,
         layoutResId: Int,
         layoutParams: ViewGroup.LayoutParams,
-        maxCount: Int = Int.MAX_VALUE
     ) {
         val inflater = LayoutInflater.from(requireContext())
         container.removeAllViews()
 
-        for (song in songs.take(maxCount)) {
+        for (song in songs) {
             val songView = inflater.inflate(layoutResId, container, false)
 
             val cover = songView.findViewById<ImageView>(R.id.songArtwork)

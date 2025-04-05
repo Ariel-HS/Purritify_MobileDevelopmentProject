@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Song::class], version = 1)
+@Database(entities = [Song::class], version = 2)
 @TypeConverters(Converters::class)
 abstract class SongDatabase: RoomDatabase() {
     abstract val songDao: SongDao
