@@ -90,6 +90,7 @@ class SongViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SongState())
 
     // Profile Statistics
+    fun getSongCount(): Flow<Int> { return dao.getAll().map { songs -> songs.size }}
     fun getLikedSongCount(): Flow<Int> { return dao.searchLiked().map { likedSongs -> likedSongs.size }}
     fun getListenedSongCount(): Flow<Int> { return dao.getAll().map { songs -> songs.count { it.lastPlayed != null }}}
 
@@ -134,7 +135,7 @@ class SongViewModel(
                     pathFile = pathFile,
                     duration = duration,
                     liked = false,
-                    uploadDate = java.util.Date(),
+                    uploadDate = Date(),
                     lastPlayed = null
                 )
 

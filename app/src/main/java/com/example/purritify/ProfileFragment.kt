@@ -1,5 +1,6 @@
 package com.example.purritify
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.Drawable
@@ -29,6 +30,9 @@ import com.example.purritify.ui.library.SongViewModel
 import com.example.purritify.ui.library.SongViewModelFactory
 import com.example.purritify.ui.login.TokenManager
 import com.example.purritify.ui.profile.ProfileViewModel
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -44,6 +48,7 @@ class ProfileFragment : Fragment() {
     private lateinit var profileViewModel: ProfileViewModel
     private lateinit var songViewModel: SongViewModel
 
+    private var songs: Int = 0
     private var liked: Int = 0
     private var listened: Int = 0
 
@@ -69,22 +74,6 @@ class ProfileFragment : Fragment() {
         token?.let {
             profileViewModel.fetchProfile("Bearer $it")
         } ?: Log.d("ProfileFragment", "Token not found.")
-
-        // Fetch statistics
-        lifecycleScope.launch {
-            // Liked
-            songViewModel.getLikedSongCount().collect { count ->
-                liked = count
-            }
-
-            // Listened
-            songViewModel.getListenedSongCount().collect { count ->
-                listened = count
-            }
-
-            // Songs
-            // TODO
-        }
     }
 
     override fun onCreateView(
@@ -100,7 +89,7 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Observe and update UI
+        // Profile
         profileViewModel.profile.observe(viewLifecycleOwner, Observer { profile ->
             profile?.let {
                 // Get profile picture
@@ -108,9 +97,23 @@ class ProfileFragment : Fragment() {
 
                 loadProfileCard(profile.username, Locale("", profile.location).displayCountry, profileUrl)
                 adjustBGColor(profileUrl)
-                loadStatistics()
             }
         })
+
+        // Statistics
+        lifecycleScope.launch {
+            // Fetch data
+            val songCountDeferred: Deferred<Int> = async { songViewModel.getSongCount().first() }
+            val likedCountDeferred: Deferred<Int> = async { songViewModel.getLikedSongCount().first() }
+            val listenedCountDeferred: Deferred<Int> = async { songViewModel.getListenedSongCount().first() }
+
+            songs = songCountDeferred.await()
+            liked = likedCountDeferred.await()
+            listened = listenedCountDeferred.await()
+
+            // Display data
+            loadStatistics()
+        }
     }
 
     private fun loadProfileCard(name: String, location: String, profileUrl: String) {
@@ -133,11 +136,10 @@ class ProfileFragment : Fragment() {
         container.addView(cardView)
     }
 
+    @SuppressLint("MemberExtensionConflict")
     private fun loadStatistics() {
-        // TODO: Songs
-
         // Load songs
-        loadStatistic(binding.profileSongsStatistics, "000", "SONGS")
+        loadStatistic(binding.profileSongsStatistics, songs.toString(), "SONGS")
 
         // Load liked
         loadStatistic(binding.profileLikedStatistics, liked.toString(), "LIKED")
