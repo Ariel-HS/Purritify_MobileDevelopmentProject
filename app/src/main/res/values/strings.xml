@@ -39,4 +39,7 @@
     <string name="delete_button_title">Are you sure?</string>
     <string name="delete_button_subtitle">This action cannot be undone</string>
     <string name="delete_button">Confirm Delete</string>
+    <string name="close_player_screen">Close player screen</string>
+    <string name="previous_song">Previous Song</string>
+    <string name="next_song">Next song</string>
 </resources>
