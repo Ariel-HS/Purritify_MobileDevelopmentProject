@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -87,6 +88,10 @@ class SongViewModel(
     val recentlyPlayedState = combine(_state, _recentlyPlayedSongs) { state, songs ->
         state.copy(songs = songs)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SongState())
+
+    // Profile Statistics
+    fun getLikedSongCount(): Flow<Int> { return dao.searchLiked().map { likedSongs -> likedSongs.size }}
+    fun getListenedSongCount(): Flow<Int> { return dao.getAll().map { songs -> songs.count { it.lastPlayed != null }}}
 
     fun onEvent(event: SongEvent) {
         when (event) {

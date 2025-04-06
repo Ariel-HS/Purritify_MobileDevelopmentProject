@@ -1,7 +1,8 @@
 package com.example.purritify
 
+import android.graphics.Bitmap
 import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.util.Log
@@ -12,16 +13,23 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.palette.graphics.Palette
-import com.example.purritify.data.model.ProfileResponse
+import androidx.room.Room
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
+import com.example.purritify.data.room.SongDatabase
 import com.example.purritify.databinding.FragmentProfileBinding
-import com.example.purritify.retrofit.RetrofitClient
+import com.example.purritify.retrofit.Api
+import com.example.purritify.ui.library.SongViewModel
+import com.example.purritify.ui.library.SongViewModelFactory
 import com.example.purritify.ui.login.TokenManager
-import retrofit2.Callback
-import retrofit2.Call
-import retrofit2.Response
+import com.example.purritify.ui.profile.ProfileViewModel
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 /**
@@ -32,9 +40,51 @@ import java.util.Locale
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
 
+    private lateinit var songDatabase: SongDatabase
+    private lateinit var profileViewModel: ProfileViewModel
+    private lateinit var songViewModel: SongViewModel
+
+    private var liked: Int = 0
+    private var listened: Int = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Init database
+        songDatabase = Room.databaseBuilder(
+            requireContext(),
+            SongDatabase::class.java,
+            "songs.db"
+        ).build()
+
+        // Init ViewModels
+        profileViewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
+        songViewModel = ViewModelProvider(
+            this,
+            SongViewModelFactory(songDatabase.songDao)
+        )[SongViewModel::class.java]
+
+        // Fetch profile from backend
+        val token = TokenManager.getInstance(requireContext()).getToken()
+        token?.let {
+            profileViewModel.fetchProfile("Bearer $it")
+        } ?: Log.d("ProfileFragment", "Token not found.")
+
+        // Fetch statistics
+        lifecycleScope.launch {
+            // Liked
+            songViewModel.getLikedSongCount().collect { count ->
+                liked = count
+            }
+
+            // Listened
+            songViewModel.getListenedSongCount().collect { count ->
+                listened = count
+            }
+
+            // Songs
+            // TODO
+        }
     }
 
     override fun onCreateView(
@@ -50,39 +100,20 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Fetch profile from backend
-        val token = TokenManager.getInstance(requireContext()).getToken()
+        // Observe and update UI
+        profileViewModel.profile.observe(viewLifecycleOwner, Observer { profile ->
+            profile?.let {
+                // Get profile picture
+                val profileUrl = "${Api.BASE_URL}/uploads/profile-picture/${profile.profilePhoto}"
 
-        if (token != null)
-            fetchProfile("Bearer $token")
-        else
-            Log.d("ProfileFragment", "Token not found.")
-
-    }
-
-    private fun fetchProfile(token: String) {
-        val api = RetrofitClient.getInstance().getMyApi()
-        api.fetchProfile(token).enqueue(object: Callback<ProfileResponse> {
-            override fun onResponse(call: Call<ProfileResponse>, response: Response<ProfileResponse>) {
-                if (response.isSuccessful) {
-                    val profile = response.body()
-
-                    profile?.let {
-                        loadProfileCard(profile.username, Locale("", profile.location).displayCountry, profile.profilePhoto)
-                        adjustBGColor(profile.profilePhoto)
-                        loadStatistics()
-                    }
-                } else
-                    Log.e("ProfileFragment", "Error: ${response.code()} - ${response.message()}")
-            }
-
-            override fun onFailure(call: Call<ProfileResponse>, t: Throwable) {
-                Log.e("ProfileFragment", "API failure: ${t.message}", t)
+                loadProfileCard(profile.username, Locale("", profile.location).displayCountry, profileUrl)
+                adjustBGColor(profileUrl)
+                loadStatistics()
             }
         })
     }
 
-    private fun loadProfileCard(name: String, location: String, profilePhoto: String) {
+    private fun loadProfileCard(name: String, location: String, profileUrl: String) {
         val container = binding.profileCardContainer
 
         val cardView = layoutInflater.inflate(R.layout.profile_card, container, false)
@@ -94,23 +125,25 @@ class ProfileFragment : Fragment() {
         // Set data
         nameTextView.text = name
         locationTextView.text = location
-        profileImageView.setImageResource(R.drawable.sample_profile) // TODO: Implement profile pictures
+        Glide.with(this).
+        load(profileUrl)
+            .into(profileImageView)
 
         // Display card
         container.addView(cardView)
     }
 
     private fun loadStatistics() {
-        // TODO: Dynamically assign content
+        // TODO: Songs
 
         // Load songs
         loadStatistic(binding.profileSongsStatistics, "000", "SONGS")
 
         // Load liked
-        loadStatistic(binding.profileLikedStatistics, "001", "LIKED")
+        loadStatistic(binding.profileLikedStatistics, liked.toString(), "LIKED")
 
         // Load listened
-        loadStatistic(binding.profileListenedStatistics, "002", "LISTENED")
+        loadStatistic(binding.profileListenedStatistics, listened.toString(), "LISTENED")
     }
 
     private fun loadStatistic(container: FrameLayout, content: String, title: String) {
@@ -125,22 +158,32 @@ class ProfileFragment : Fragment() {
         container.addView(view)
     }
 
-    private fun adjustBGColor(profilePhoto: String) {
-        val drawable = ContextCompat.getDrawable(requireContext(), R.drawable.sample_profile) as BitmapDrawable // TODO: Implement profile pictures
-        val bitmap = drawable.bitmap
+    private fun adjustBGColor(profileUrl: String) {
+        Glide.with(requireContext())
+            .asBitmap()
+            .load(profileUrl)
+            .into(object : CustomTarget<Bitmap>() {
+                override fun onResourceReady(bitmap: Bitmap, transition: Transition<in Bitmap>?) {
+                    Palette.from(bitmap).generate { palette ->
+                        // Get dominant color
+                        val dominantColor = palette?.getDominantColor(Color.BLACK) ?: Color.BLACK
 
-        Palette.from(bitmap).generate { palette ->
-            val dominantColor = palette?.getDominantColor(Color.BLACK) ?: Color.BLACK
+                        // Adjust brightness
+                        val bgColor = ColorUtils.blendARGB(dominantColor, Color.BLACK, 0.3f)
 
-            val bgColor = ColorUtils.blendARGB(dominantColor, Color.BLACK, 0.3f)
+                        // Create gradient
+                        val gradientDrawable = GradientDrawable(
+                            GradientDrawable.Orientation.TOP_BOTTOM,
+                            intArrayOf(bgColor, Color.BLACK, Color.BLACK)
+                        )
 
-            val gradientDrawable = GradientDrawable(
-                GradientDrawable.Orientation.TOP_BOTTOM,
-                intArrayOf(bgColor, Color.BLACK, Color.BLACK)
-            )
+                        // Set as background color
+                        binding.root.background = gradientDrawable
+                    }
+                }
 
-            binding.root.background = gradientDrawable
-        }
+                override fun onLoadCleared(placeholder: Drawable?) { }
+            })
     }
 
     companion object {
@@ -148,8 +191,6 @@ class ProfileFragment : Fragment() {
          * Use this factory method to create a new instance of
          * this fragment using the provided parameters.
          *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
          * @return A new instance of fragment ProfileFragment.
          */
         @JvmStatic
