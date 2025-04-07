@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black"
@@ -50,7 +51,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/buttonContainer"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="40dp" />
+        android:layout_marginTop="60dp" />
 
     <!-- Song Data -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -60,7 +61,7 @@
         app:layout_constraintStart_toStartOf="@id/songCover"
         app:layout_constraintEnd_toEndOf="@id/songCover"
         app:layout_constraintTop_toBottomOf="@id/songCover"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="24dp"
         >
 
         <!-- Title -->
@@ -112,7 +113,7 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Duration Bar -->
-    <FrameLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/durationBar"
         android:layout_width="0dp"
         android:layout_height="45dp"
@@ -120,17 +121,58 @@
         app:layout_constraintEnd_toEndOf="@id/songCover"
         app:layout_constraintTop_toBottomOf="@id/songDataContainer"
         android:layout_marginTop="12dp">
+
         <SeekBar
             android:id="@+id/songSeekBar"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
             android:progressTint="@color/white"
             android:thumbTint="@color/white"
             android:progressBackgroundTint="@color/white"
             android:backgroundTint="@color/white"
-            android:splitTrack="false" />
-    </FrameLayout>
+            android:splitTrack="false"
+            android:padding="0dp"
+
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+
+            android:layout_marginStart="-10dp"
+            android:layout_marginEnd="-10dp"/>
+
+        <TextView
+            android:id="@+id/songDurationAt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="10sp"
+            android:textColor="#B2B2B2"
+            android:text="@string/_0_00"
+            tools:ignore="SmallSp"
+
+            app:layout_constraintTop_toBottomOf="@id/songSeekBar"
+            app:layout_constraintStart_toStartOf="@id/songSeekBar"
+
+            android:layout_marginTop="2dp"
+            android:layout_marginStart="12dp"
+            />
+
+        <TextView
+            android:id="@+id/songDurationTo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="10sp"
+            android:textColor="#B2B2B2"
+            android:text="@string/_0_00"
+            tools:ignore="SmallSp"
+
+            app:layout_constraintTop_toBottomOf="@id/songSeekBar"
+            app:layout_constraintEnd_toEndOf="@id/songSeekBar"
+
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="12dp" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Controller -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -140,7 +182,7 @@
         app:layout_constraintTop_toBottomOf="@id/durationBar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="12dp">
+        android:layout_marginTop="24dp">
 
         <!-- Prev -->
         <ImageButton
@@ -156,16 +198,39 @@
             app:layout_constraintStart_toStartOf="parent" />
 
         <!-- Pause / Play (Load Dynamically) -->
-        <ImageButton
-            android:id="@+id/pausePlayButton"
+        <FrameLayout
+            android:id="@+id/pausePlayContainer"
             android:layout_width="56dp"
             android:layout_height="56dp"
+            android:background="@drawable/circle"
+            android:clickable="true"
+            android:focusable="true"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBaseline_toBaselineOf="parent"
-            android:background="@drawable/play"
-            android:src="@drawable/play"
-            />
+            app:layout_constraintBaseline_toBaselineOf="parent">
+
+            <ImageView
+                android:id="@+id/playIcon"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/play_button"
+                android:src="@drawable/play"
+                android:scaleType="centerInside"
+                android:visibility="gone"
+                android:alpha="0.0"
+                android:layout_marginStart="4dp"/>
+
+            <ImageView
+                android:id="@+id/pauseIcon"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/pause_button"
+                android:src="@drawable/pause"
+                android:scaleType="centerInside"
+                android:visibility="visible"
+                android:alpha="1.0" />
+
+        </FrameLayout>
         
         <!-- Next -->
         <ImageButton

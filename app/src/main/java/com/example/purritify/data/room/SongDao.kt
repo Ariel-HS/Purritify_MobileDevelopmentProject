@@ -22,6 +22,9 @@ interface SongDao {
     @Query("SELECT * FROM song WHERE id IN (:songIds)")
     fun selectAllByIds(songIds: IntArray): Flow<List<Song>>
 
+    @Query("SELECT * FROM song WHERE id = :id")
+    fun getSongById(id: Int): Flow<Song?>
+
     @Query("SELECT * FROM song WHERE title LIKE :title ")
     fun searchByTitle(title: String): Flow<List<Song>>
 

@@ -94,6 +94,9 @@ class SongViewModel(
     fun getLikedSongCount(): Flow<Int> { return dao.searchLiked().map { likedSongs -> likedSongs.size }}
     fun getListenedSongCount(): Flow<Int> { return dao.getAll().map { songs -> songs.count { it.lastPlayed != null }}}
 
+    // Player
+    fun getSongById(id: Int): Flow<Song?> { return dao.getSongById(id) }
+
     fun onEvent(event: SongEvent) {
         when (event) {
             is SongEvent.DeleteSong -> {
