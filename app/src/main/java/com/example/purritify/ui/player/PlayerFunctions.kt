@@ -15,6 +15,9 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.example.purritify.R
+import com.example.purritify.data.room.Song
+import com.example.purritify.data.room.SongEvent
+import com.example.purritify.ui.library.SongViewModel
 import com.google.android.material.card.MaterialCardView
 import java.io.File
 
@@ -91,4 +94,12 @@ fun animatePauseIcon(isPaused: Boolean, playIconView: ImageView, pauseIconView: 
             pauseIconView.animate().alpha(1f).setDuration(fadeDuration).start()
         }.start()
     }
+}
+
+fun handleLike(song: Song, songViewModel: SongViewModel, playerViewModel: PlayerViewModel) {
+    val updatedSong = song.copy(liked = !song.liked)
+
+    songViewModel.onEvent(SongEvent.UpsertSong(updatedSong))
+
+    playerViewModel.setCurrentSong(updatedSong)
 }

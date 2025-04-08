@@ -102,7 +102,7 @@ class HomeFragment : Fragment() {
 
         // Miniplayer logic
         val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
-        miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel)
+        miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, songViewModel)
 
         // Toolbar & Navigation
         purritifyToolbar()

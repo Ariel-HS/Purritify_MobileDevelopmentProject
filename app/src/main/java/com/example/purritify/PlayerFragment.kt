@@ -21,9 +21,9 @@ import com.example.purritify.ui.player.PlayerViewModel
 import kotlinx.coroutines.launch
 import java.util.Locale
 import androidx.core.net.toUri
-import com.example.purritify.data.room.SongEvent
 import com.example.purritify.ui.player.animatePauseIcon
 import com.example.purritify.ui.player.handleCover
+import com.example.purritify.ui.player.handleLike
 
 enum class Direction {
     NEXT, PREVIOUS
@@ -88,29 +88,32 @@ class PlayerFragment : Fragment() {
 
                     // Send back to home
                     findNavController().popBackStack()
-                } else {
-                    currentSong = song
-                    Log.d("PlayerFragment", "Song loaded: $song")
-
-                    handleData()
-
-                    // Start player if not currently playing & not currently paused
-                    if (!playerViewModel.isPlaying() && playerViewModel.isPaused.value != true) {
-                        playerViewModel.setCurrentSong(currentSong!!)
-                        playerViewModel.playSong(currentSong!!.pathFile.toUri())
-                    }
-
-                    // Handle pause button
-                    binding.pausePlayContainer.setOnClickListener { playerViewModel.togglePause() }
-
-                    // Handle like button
-                    setupLikeButton()
-                    binding.heartButton.setOnClickListener { handleLike() }
-
-                    // Handle prev & next button
-                    binding.nextButton.setOnClickListener { switchSongs(Direction.NEXT) }
-                    binding.prevButton.setOnClickListener { switchSongs(Direction.PREVIOUS) }
                 }
+
+                Log.d("PlayerFragment", "Song loaded: $song")
+
+                currentSong = song
+
+                // Update UI
+                handleData()
+
+                // Start player if not currently playing & not currently paused
+                if (!playerViewModel.isPlaying() && playerViewModel.isPaused.value != true) {
+                    playerViewModel.setCurrentSong(currentSong!!)
+                    playerViewModel.playSong(currentSong!!.pathFile.toUri())
+                }
+
+                // Handle pause button
+                binding.pausePlayContainer.setOnClickListener { playerViewModel.togglePause() }
+
+                // Handle like button
+                binding.heartButton.setOnClickListener { handleLike(currentSong!!, songViewModel, playerViewModel) }
+                setupLikeButton()
+
+                // Handle prev & next button
+                binding.nextButton.setOnClickListener { switchSongs(Direction.NEXT) }
+                binding.prevButton.setOnClickListener { switchSongs(Direction.PREVIOUS) }
+
             }
         }
 
@@ -179,24 +182,7 @@ class PlayerFragment : Fragment() {
 
     // ---------------------------------------------------------------- Other  ----------------------------------------------------------------------------------
 
-    private fun setupLikeButton() {
-        val heart = binding.heartButton
-        val isLiked = currentSong!!.liked
-
-        if (isLiked) {
-            heart.background = ContextCompat.getDrawable(requireContext(), R.drawable.heart_filled)
-        } else {
-            heart.background = null
-        }
-    }
-
-    private fun handleLike() {
-        val updatedSong = currentSong!!.copy(liked = !currentSong!!.liked)
-
-        songViewModel.onEvent(SongEvent.UpsertSong(updatedSong))
-
-        setupLikeButton()
-    }
+    private fun setupLikeButton() { binding.heartButton.background = if (currentSong!!.liked) ContextCompat.getDrawable(requireContext(), R.drawable.heart_filled) else null }
 
     companion object {
         private const val ARG_SONG_ID = "arg_song_id"

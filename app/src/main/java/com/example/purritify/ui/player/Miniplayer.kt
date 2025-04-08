@@ -2,13 +2,18 @@ package com.example.purritify.ui.player
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import android.widget.SeekBar
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import com.example.purritify.R
 import com.example.purritify.data.room.Song
 import com.example.purritify.databinding.MiniplayerBinding
+import com.example.purritify.ui.library.SongViewModel
 
+// TODO: Redirect to player fragment when clicked on
 class MiniplayerView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyle: Int = 0
 ) : FrameLayout(context, attrs, defStyle) {
@@ -36,6 +41,14 @@ class MiniplayerView @JvmOverloads constructor(
 
     private fun setOnPause(action: () -> Unit) { binding.pausePlayContainer.setOnClickListener { action() } }
 
+    private fun setOnLike(songViewModel: SongViewModel, song: Song?, playerViewModel: PlayerViewModel) {
+        Log.d("Miniplayer", "Now listening to clicks")
+        binding.addButton.setOnClickListener {
+            Log.d("Miniplayer", "Liked $song")
+            handleLike(song!!, songViewModel, playerViewModel)
+        }
+    }
+
     private fun updateDuration(duration: Int) {
         binding.songSeekBar.max = duration
     }
@@ -55,8 +68,14 @@ class MiniplayerView @JvmOverloads constructor(
         })
     }
 
-    fun activateMiniplayer(lifecycleOwner: LifecycleOwner, playerViewModel: PlayerViewModel) {
-        playerViewModel.currentSong.observe(lifecycleOwner) { bindSong(it) }
+    fun activateMiniplayer(lifecycleOwner: LifecycleOwner, playerViewModel: PlayerViewModel, songViewModel: SongViewModel) {
+        playerViewModel.currentSong.observe(lifecycleOwner) {
+            bindSong(it)
+            setOnLike(songViewModel, it, playerViewModel)
+
+            binding.addButton.setImageResource( if (it?.liked == true) R.drawable.like else R.drawable.unlike )
+        }
+
         playerViewModel.isPaused.observe(lifecycleOwner) { updatePauseIcon(it) }
         playerViewModel.duration.observe(lifecycleOwner) { updateDuration(it) }
         playerViewModel.currentTime.observe(lifecycleOwner) { updateCurrentTime(it) }

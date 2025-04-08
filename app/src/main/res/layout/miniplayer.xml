@@ -84,14 +84,14 @@
             <ImageButton
                 android:id="@+id/addButton"
                 android:src="@drawable/like"
-                android:background="@drawable/like"
+                android:background="@android:color/transparent"
                 android:layout_width="16dp"
                 android:layout_height="16dp"/>
 
             <!-- Pause / Play Button -->
             <FrameLayout
                 android:id="@+id/pausePlayContainer"
-                android:layout_width="wrap_content"
+                android:layout_width="13dp"
                 android:layout_height="16dp"
                 android:clickable="true"
                 android:focusable="true"
@@ -102,7 +102,7 @@
                 <!-- Play -->
                 <ImageView
                     android:id="@+id/playIcon"
-                    android:layout_width="16dp"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:contentDescription="@string/play_button"
                     android:src="@drawable/play_miniplayer"
@@ -113,7 +113,7 @@
                 <!-- Pause -->
                 <ImageView
                     android:id="@+id/pauseIcon"
-                    android:layout_width="12.8dp"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:contentDescription="@string/pause_button"
                     android:src="@drawable/pause_miniplayer"
