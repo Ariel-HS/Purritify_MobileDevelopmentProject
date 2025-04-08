@@ -1,134 +1,149 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    android:id="@+id/cardView"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="54dp"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:padding="12dp"
+    android:layout_height="wrap_content"
+    android:layout_margin="0dp"
+    app:cardCornerRadius="6dp"
+    app:cardElevation="0dp"
+    android:layout_gravity="center"
     android:clipToPadding="false"
-    android:background="@drawable/miniplayer_bg">
+    android:clipChildren="false"
+    app:strokeWidth="0dp"
+    app:cardBackgroundColor="@color/black">
 
-    <!-- Cover -->
-    <ImageView
-        android:id="@+id/songCover"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:contentDescription="@string/song_cover"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:padding="12dp"
+        android:clipToPadding="false">
 
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        <!-- Cover -->
+        <ImageView
+            android:id="@+id/songCover"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:contentDescription="@string/song_cover"
 
-    <!-- Song Data -->
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="32dp"
-        android:orientation="vertical"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
-        android:layout_marginStart="14dp"
+        <!-- Song Data -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:orientation="vertical"
 
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/songCover" >
+            android:layout_marginStart="14dp"
 
-        <!-- Title -->
-        <TextView
-            android:id="@+id/songTitle"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/songCover" >
+
+            <!-- Title -->
+            <TextView
+                android:id="@+id/songTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:text="@string/title"
+                android:textColor="@color/white"/>
+
+            <!-- Artist -->
+            <TextView
+                android:id="@+id/songArtist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:textSize="10sp"
+                android:text="@string/artist"
+                android:textColor="#B3B3B3"
+                tools:ignore="SmallSp"
+
+                android:layout_marginTop="2dp" />
+
+        </LinearLayout>
+
+        <!-- Controller -->
+        <LinearLayout
+            android:id="@+id/songControllerContainer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:text="@string/title"
-            android:textColor="@color/white"/>
 
-        <!-- Artist -->
-        <TextView
-            android:id="@+id/songArtist"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:textSize="10sp"
-            android:text="@string/artist"
-            android:textColor="#B3B3B3"
-            tools:ignore="SmallSp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
-            android:layout_marginTop="2dp" />
-
-    </LinearLayout>
-    
-    <!-- Controller -->
-    <LinearLayout
-        android:id="@+id/songControllerContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <!-- Add Button -->
-        <ImageButton
-            android:id="@+id/addButton"
-            android:src="@drawable/like"
-            android:background="@drawable/like"
-            android:layout_width="16dp"
-            android:layout_height="16dp"/>
-
-        <!-- Pause / Play Button -->
-        <FrameLayout
-            android:layout_width="wrap_content"
-            android:layout_height="16dp"
-            android:clickable="true"
-            android:focusable="true"
-
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="12dp">
-
-            <!-- Play -->
-            <ImageView
-                android:id="@+id/playIcon"
+            <!-- Add Button -->
+            <ImageButton
+                android:id="@+id/addButton"
+                android:src="@drawable/like"
+                android:background="@drawable/like"
                 android:layout_width="16dp"
-                android:layout_height="match_parent"
-                android:contentDescription="@string/play_button"
-                android:src="@drawable/play"
-                android:scaleType="centerInside"
-                android:visibility="gone"
-                android:alpha="0.0"
-                android:layout_marginStart="4dp"/>
+                android:layout_height="16dp"/>
 
-            <!-- Pause -->
-            <ImageView
-                android:id="@+id/pauseIcon"
-                android:layout_width="12.8dp"
-                android:layout_height="match_parent"
-                android:contentDescription="@string/pause_button"
-                android:src="@drawable/pause_miniplayer"
-                android:scaleType="centerInside"
-                android:visibility="visible"
-                android:alpha="1.0" />
+            <!-- Pause / Play Button -->
+            <FrameLayout
+                android:id="@+id/pausePlayContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="16dp"
+                android:clickable="true"
+                android:focusable="true"
 
-        </FrameLayout>
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="12dp">
 
-    </LinearLayout>
+                <!-- Play -->
+                <ImageView
+                    android:id="@+id/playIcon"
+                    android:layout_width="16dp"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/play_button"
+                    android:src="@drawable/play_miniplayer"
+                    android:scaleType="centerInside"
+                    android:visibility="gone"
+                    android:alpha="0.0" />
 
-    <!-- Duration Bar -->
-    <SeekBar
-        android:id="@+id/miniSeekBar"
-        android:layout_width="0dp"
-        android:layout_height="2dp"
-        android:progress="50"
-        android:thumb="@null"
-        android:clickable="false"
-        android:focusable="false"
-        android:progressDrawable="@drawable/mini_seekbar_progress"
+                <!-- Pause -->
+                <ImageView
+                    android:id="@+id/pauseIcon"
+                    android:layout_width="12.8dp"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/pause_button"
+                    android:src="@drawable/pause_miniplayer"
+                    android:scaleType="centerInside"
+                    android:visibility="visible"
+                    android:alpha="1.0" />
 
-        android:layout_marginBottom="-12.4dp"
-        android:layout_marginStart="-20dp"
-        android:layout_marginEnd="-20dp"
+            </FrameLayout>
 
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <!-- Duration Bar -->
+        <SeekBar
+            android:id="@+id/songSeekBar"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:progress="50"
+            android:thumb="@null"
+            android:clickable="false"
+            android:focusable="false"
+            android:progressDrawable="@drawable/mini_seekbar_progress"
+
+            android:layout_marginBottom="-12.4dp"
+            android:layout_marginStart="-20dp"
+            android:layout_marginEnd="-20dp"
+
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

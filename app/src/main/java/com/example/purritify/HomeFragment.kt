@@ -19,6 +19,7 @@ import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDatabase
 import com.example.purritify.ui.library.SongViewModel
 import com.example.purritify.ui.library.SongViewModelFactory
+import com.example.purritify.ui.player.MiniplayerView
 import com.example.purritify.ui.player.PlayerViewModel
 import kotlinx.coroutines.launch
 
@@ -100,28 +101,8 @@ class HomeFragment : Fragment() {
         }
 
         // Miniplayer logic
-        playerViewModel.currentSong.observe(viewLifecycleOwner) { song ->
-            val container = binding.miniPlayerContainer
-
-            if (song != null) {
-                container.removeAllViews()
-
-                // Inflate the miniplayer layout
-                val miniPlayerView = layoutInflater.inflate(R.layout.miniplayer, container, false)
-                container.addView(miniPlayerView)
-                container.visibility = View.VISIBLE
-
-                // Fill in song data
-                miniPlayerView.findViewById<TextView>(R.id.songTitle).text = song.title
-                miniPlayerView.findViewById<TextView>(R.id.songArtist).text = song.artist
-
-                // TODO: Cover, pause button, add button, bg color, redirect to player
-            } else {
-                container.removeAllViews()
-                container.visibility = View.GONE
-            }
-        }
-
+        val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
+        miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel)
 
         // Toolbar & Navigation
         purritifyToolbar()

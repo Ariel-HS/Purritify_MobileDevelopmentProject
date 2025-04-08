@@ -1,10 +1,5 @@
 package com.example.purritify
 
-import android.graphics.Bitmap
-import android.graphics.Color
-import android.graphics.drawable.Drawable
-import android.graphics.drawable.GradientDrawable
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,27 +7,23 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
 import com.example.purritify.databinding.FragmentPlayerBinding
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.palette.graphics.Palette
 import androidx.room.Room
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
 import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDatabase
 import com.example.purritify.ui.library.SongViewModel
 import com.example.purritify.ui.library.SongViewModelFactory
 import com.example.purritify.ui.player.PlayerViewModel
 import kotlinx.coroutines.launch
-import java.io.File
 import java.util.Locale
 import androidx.core.net.toUri
 import com.example.purritify.data.room.SongEvent
+import com.example.purritify.ui.player.animatePauseIcon
+import com.example.purritify.ui.player.handleCover
 
 enum class Direction {
     NEXT, PREVIOUS
@@ -142,31 +133,11 @@ class PlayerFragment : Fragment() {
         }
 
         playerViewModel.isPaused.observe(viewLifecycleOwner) { paused ->
-            animatePauseIcon(paused)
+            animatePauseIcon(paused, binding.playIcon, binding.pauseIcon)
         }
     }
 
     // ---------------------------------------------------------------- Handle Song Playing ----------------------------------------------------------------------------------
-    private fun animatePauseIcon(isPaused: Boolean) {
-        val fadeDuration = 80L
-
-        val playIcon = binding.playIcon
-        val pauseIcon = binding.pauseIcon
-
-        if (isPaused) {
-            pauseIcon.animate().alpha(0f).setDuration(fadeDuration).withEndAction {
-                pauseIcon.visibility = View.GONE
-                playIcon.visibility = View.VISIBLE
-                playIcon.animate().alpha(1f).setDuration(fadeDuration).start()
-            }.start()
-        } else {
-            playIcon.animate().alpha(0f).setDuration(fadeDuration).withEndAction {
-                playIcon.visibility = View.GONE
-                pauseIcon.visibility = View.VISIBLE
-                pauseIcon.animate().alpha(1f).setDuration(fadeDuration).start()
-            }.start()
-        }
-    }
 
     private fun handleTime(ms: Int): String {
         val totalSec = ms / 1000
@@ -203,55 +174,7 @@ class PlayerFragment : Fragment() {
         binding.songTitle.text = currentSong!!.title
         binding.songArtist.text = currentSong!!.artist
 
-        handleCover(currentSong!!.pathArtwork)
-    }
-    private fun handleCover(coverPath: String) {
-        val file = File(coverPath)
-
-        if (file.exists()) {
-            val uri = Uri.fromFile(file)
-            Glide.with(requireContext())
-                .load(uri)
-                .into(binding.songCover)
-
-            adjustBGColor(uri)
-        } else {
-            Log.d("PlayerFragment", "Cover doesn't exist at $coverPath, defaulting to sample cover")
-
-            binding.songCover.setImageResource(R.drawable.sample_cover)
-            adjustBGColor(null)
-        }
-    }
-
-    private fun adjustBGColor(coverUri: Uri?) {
-        val cover = coverUri ?: R.drawable.sample_cover
-
-        Glide.with(requireContext())
-            .asBitmap()
-            .load(cover)
-            .into(object : CustomTarget<Bitmap>() {
-                override fun onResourceReady(bitmap: Bitmap, transition: Transition<in Bitmap>?) {
-                    Palette.from(bitmap).generate { palette ->
-                        // Get dominant color
-                        val dominantColor = palette?.getDominantColor(Color.BLACK) ?: Color.BLACK
-
-                        // Adjust brightness
-                        val bgColor1 = ColorUtils.blendARGB(dominantColor, Color.WHITE, 0.1f)
-                        val bgColor2 = ColorUtils.blendARGB(dominantColor, Color.BLACK, 0.2f)
-
-                        // Create gradient
-                        val gradientDrawable = GradientDrawable(
-                            GradientDrawable.Orientation.TOP_BOTTOM,
-                            intArrayOf(bgColor1, bgColor2, Color.BLACK)
-                        )
-
-                        // Set as background color
-                        binding.root.background = gradientDrawable
-                    }
-                }
-
-                override fun onLoadCleared(placeholder: Drawable?) { }
-            })
+        handleCover(requireContext(), currentSong!!.pathArtwork, binding.songCover, binding.root, "PlayerFragment")
     }
 
     // ---------------------------------------------------------------- Other  ----------------------------------------------------------------------------------

@@ -123,8 +123,8 @@
         </LinearLayout>
 
         <!-- Mini Player -->
-        <FrameLayout
-            android:id="@+id/miniPlayerContainer"
+        <com.example.purritify.ui.player.MiniplayerView
+            android:id="@+id/miniPlayer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
