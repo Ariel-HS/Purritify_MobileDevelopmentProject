@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
 import com.example.purritify.databinding.FragmentPlayerBinding
@@ -31,17 +32,22 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.util.Locale
 import androidx.core.net.toUri
+import com.example.purritify.data.room.SongEvent
+
+enum class Direction {
+    NEXT, PREVIOUS
+}
 
 class PlayerFragment : Fragment() {
     private var songId: Int = -1
-    private lateinit var binding: FragmentPlayerBinding
+    private var currentSong: Song? = null
 
+    private lateinit var binding: FragmentPlayerBinding
     private lateinit var playerViewModel: PlayerViewModel
+
     private lateinit var songViewModel: SongViewModel
 
     private lateinit var songDatabase: SongDatabase
-
-    private var currentSong: Song? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,13 +103,20 @@ class PlayerFragment : Fragment() {
                     // Start player if not currently playing & not currently paused
                     if (!playerViewModel.isPlaying() && playerViewModel.isPaused.value != true)
                         playerViewModel.playSong(currentSong!!.pathFile.toUri())
+
+                    // Handle pause button
+                    binding.pausePlayContainer.setOnClickListener { playerViewModel.togglePause() }
+
+                    // Handle like button
+                    setupLikeButton()
+                    binding.heartButton.setOnClickListener { handleLike() }
+
+                    // Handle prev & next button
+                    binding.nextButton.setOnClickListener { switchSongs(Direction.NEXT) }
+                    binding.prevButton.setOnClickListener { switchSongs(Direction.PREVIOUS) }
                 }
             }
         }
-
-
-        // Handle pause button
-        binding.pausePlayContainer.setOnClickListener { playerViewModel.togglePause() }
 
         // SeekBar listener
         binding.songSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -159,6 +172,26 @@ class PlayerFragment : Fragment() {
         return String.format(Locale.US, "%d:%02d", min, sec)
     }
 
+    private fun switchSongs(direction: Direction) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val id = currentSong!!.id
+
+            val nextSong = when (direction) {
+                Direction.NEXT -> songViewModel.getNextSong(id)
+                Direction.PREVIOUS -> songViewModel.getPreviousSong(id)
+            }
+
+            if (nextSong != null) {
+                currentSong = nextSong
+
+                // Refresh UI
+                handleData()
+
+                playerViewModel.playSong(nextSong.pathFile.toUri())
+            }
+        }
+    }
+
     // ---------------------------------------------------------------- Handle Song Data  ----------------------------------------------------------------------------------
     private fun handleData() {
         binding.songTitle.text = currentSong!!.title
@@ -197,7 +230,7 @@ class PlayerFragment : Fragment() {
                         val dominantColor = palette?.getDominantColor(Color.BLACK) ?: Color.BLACK
 
                         // Adjust brightness
-                        val bgColor1 = ColorUtils.blendARGB(dominantColor, Color.WHITE, 0.075f)
+                        val bgColor1 = ColorUtils.blendARGB(dominantColor, Color.WHITE, 0.1f)
                         val bgColor2 = ColorUtils.blendARGB(dominantColor, Color.BLACK, 0.2f)
 
                         // Create gradient
@@ -216,6 +249,25 @@ class PlayerFragment : Fragment() {
     }
 
     // ---------------------------------------------------------------- Other  ----------------------------------------------------------------------------------
+
+    private fun setupLikeButton() {
+        val heart = binding.heartButton
+        val isLiked = currentSong!!.liked
+
+        if (isLiked) {
+            heart.background = ContextCompat.getDrawable(requireContext(), R.drawable.heart_filled)
+        } else {
+            heart.background = null
+        }
+    }
+
+    private fun handleLike() {
+        val updatedSong = currentSong!!.copy(liked = !currentSong!!.liked)
+
+        songViewModel.onEvent(SongEvent.UpsertSong(updatedSong))
+
+        setupLikeButton()
+    }
 
     companion object {
         private const val ARG_SONG_ID = "arg_song_id"

@@ -19,6 +19,9 @@ interface SongDao {
     @Query("SELECT * FROM Song ORDER BY lastPlayed DESC LIMIT 5")
     fun getRecentlyPlayed(): Flow<List<Song>>
 
+    @Query("SELECT * FROM Song ORDER BY uploadDate ASC")
+    suspend fun getAllSortedByUploadDateOnce(): List<Song>
+
     @Query("SELECT * FROM song WHERE id IN (:songIds)")
     fun selectAllByIds(songIds: IntArray): Flow<List<Song>>
 
