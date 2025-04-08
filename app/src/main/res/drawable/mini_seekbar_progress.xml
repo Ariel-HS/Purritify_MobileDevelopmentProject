@@ -3,9 +3,7 @@
     <item android:id="@android:id/background">
         <shape android:shape="rectangle">
             <corners android:radius="999dp" />
-
-            <!-- assign dynamically later -->
-            <solid android:color="#525252" />
+            <solid android:color="#30FFFFFF" />
         </shape>
     </item>
 

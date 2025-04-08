@@ -1,7 +1,6 @@
 package com.example.purritify.ui.player
 
 import android.content.Context
-import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
@@ -27,9 +26,7 @@ class MiniplayerView @JvmOverloads constructor(
             binding.songArtist.text = song.artist
 
             // Load cover
-            val seekbarDrawable = binding.songSeekBar.progressDrawable as LayerDrawable
-
-            handleCover(context, song.pathArtwork, binding.songCover, binding.cardView, "Miniplayer", seekbarDrawable)
+            handleCover(context, song.pathArtwork, binding.songCover, binding.cardView, "Miniplayer")
 
             visibility = VISIBLE
         } else visibility = GONE

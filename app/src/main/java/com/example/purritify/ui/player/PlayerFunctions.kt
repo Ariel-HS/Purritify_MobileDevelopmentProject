@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.util.Log
 import android.view.View
@@ -19,7 +18,7 @@ import com.example.purritify.R
 import com.google.android.material.card.MaterialCardView
 import java.io.File
 
-fun handleCover(context: Context, coverPath: String, coverView: ImageView, backgroundView: View, tag: String, seekbarDrawable: LayerDrawable? = null) {
+fun handleCover(context: Context, coverPath: String, coverView: ImageView, backgroundView: View, tag: String) {
     // Load song cover then adjusts the background color to the dominant color of the cover
 
     val file = File(coverPath)
@@ -30,16 +29,16 @@ fun handleCover(context: Context, coverPath: String, coverView: ImageView, backg
             .load(uri)
             .into(coverView)
 
-        adjustBGColor(context, backgroundView, uri, seekbarDrawable)
+        adjustBGColor(context, backgroundView, uri)
     } else {
         Log.d(tag, "Cover doesn't exist at $coverPath, defaulting to sample cover")
 
         coverView.setImageResource(R.drawable.sample_cover)
-        adjustBGColor(context, backgroundView, null, seekbarDrawable)
+        adjustBGColor(context, backgroundView, null)
     }
 }
 
-fun adjustBGColor(context: Context, view: View, coverUri: Uri?, seekbarDrawable: LayerDrawable?) {
+fun adjustBGColor(context: Context, view: View, coverUri: Uri?) {
     // Adjust background color to the dominant color of the cover
 
     val cover = coverUri ?: R.drawable.sample_cover
@@ -68,17 +67,6 @@ fun adjustBGColor(context: Context, view: View, coverUri: Uri?, seekbarDrawable:
 
                         // Set as background color
                         view.background = gradientDrawable
-                    }
-
-                    // Change seekbar background color (Miniplayer)
-                    if (seekbarDrawable != null) {
-                        //  Adjust brightness
-                        val bgColor = ColorUtils.blendARGB(dominantColor, Color.WHITE, 0.2f)
-
-                        val backgroundDrawable = seekbarDrawable
-                            .findDrawableByLayerId(android.R.id.background) as GradientDrawable
-
-                        backgroundDrawable.setColor(bgColor)
                     }
                 }
             }
