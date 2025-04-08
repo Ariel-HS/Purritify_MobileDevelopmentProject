@@ -83,6 +83,9 @@ class PlayerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Handle close button
+        binding.closeButton.setOnClickListener { findNavController().popBackStack() }
+
         // For testing
         songId = 1
 
@@ -101,8 +104,10 @@ class PlayerFragment : Fragment() {
                     handleData()
 
                     // Start player if not currently playing & not currently paused
-                    if (!playerViewModel.isPlaying() && playerViewModel.isPaused.value != true)
+                    if (!playerViewModel.isPlaying() && playerViewModel.isPaused.value != true) {
+                        playerViewModel.setCurrentSong(currentSong!!)
                         playerViewModel.playSong(currentSong!!.pathFile.toUri())
+                    }
 
                     // Handle pause button
                     binding.pausePlayContainer.setOnClickListener { playerViewModel.togglePause() }
@@ -121,8 +126,8 @@ class PlayerFragment : Fragment() {
         // SeekBar listener
         binding.songSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) { if (fromUser) playerViewModel.seekTo(progress) }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStartTrackingTouch(seekBar: SeekBar?) { }
+            override fun onStopTrackingTouch(seekBar: SeekBar?) { }
         })
 
         // Observe ViewModel state
@@ -187,6 +192,7 @@ class PlayerFragment : Fragment() {
                 // Refresh UI
                 handleData()
 
+                playerViewModel.setCurrentSong(nextSong)
                 playerViewModel.playSong(nextSong.pathFile.toUri())
             }
         }

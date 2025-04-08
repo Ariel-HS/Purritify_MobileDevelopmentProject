@@ -122,6 +122,19 @@
 
         </LinearLayout>
 
+        <!-- Mini Player -->
+        <FrameLayout
+            android:id="@+id/miniPlayerContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+
+            android:layout_marginBottom="85dp"
+
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.navigation.NavigationView
@@ -134,5 +147,4 @@
         android:background="#121212"
         app:itemTextColor="@color/white"
         />
-
 </androidx.drawerlayout.widget.DrawerLayout>

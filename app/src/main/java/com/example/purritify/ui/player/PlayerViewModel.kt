@@ -10,8 +10,13 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.purritify.R
+import com.example.purritify.data.room.Song
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val _currentSong = MutableLiveData<Song?>()
+    val currentSong: LiveData<Song?> get() = _currentSong
+
     private var mediaPlayer: MediaPlayer? = null
     private val handler = Handler(Looper.getMainLooper())
 
@@ -31,6 +36,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 handler.postDelayed(this, 500)
             }
         }
+    }
+
+    fun setCurrentSong(song: Song) {
+        _currentSong.value = song
     }
 
     fun isPlaying(): Boolean {

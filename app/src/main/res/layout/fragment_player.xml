@@ -48,6 +48,7 @@
         android:id="@+id/songCover"
         android:layout_width="327dp"
         android:layout_height="327dp"
+        android:contentDescription="@string/song_cover"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/buttonContainer"
         app:layout_constraintEnd_toEndOf="parent"
@@ -209,6 +210,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBaseline_toBaselineOf="parent">
 
+            <!-- Play -->
             <ImageView
                 android:id="@+id/playIcon"
                 android:layout_width="match_parent"
@@ -220,6 +222,7 @@
                 android:alpha="0.0"
                 android:layout_marginStart="4dp"/>
 
+            <!-- Pause -->
             <ImageView
                 android:id="@+id/pauseIcon"
                 android:layout_width="match_parent"

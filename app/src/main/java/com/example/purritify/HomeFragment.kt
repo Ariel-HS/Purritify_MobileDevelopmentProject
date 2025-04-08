@@ -19,6 +19,7 @@ import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDatabase
 import com.example.purritify.ui.library.SongViewModel
 import com.example.purritify.ui.library.SongViewModelFactory
+import com.example.purritify.ui.player.PlayerViewModel
 import kotlinx.coroutines.launch
 
 // TODO: Rename parameter arguments, choose names that match
@@ -38,6 +39,7 @@ class HomeFragment : Fragment() {
     private lateinit var songDatabase: SongDatabase
 
     private lateinit var songViewModel: SongViewModel
+    private lateinit var playerViewModel: PlayerViewModel
 
     private var newSongs: List<Song> = emptyList()
     private var recentlyPlayedSongs: List<Song> = emptyList()
@@ -54,20 +56,22 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Get songs
-        val context = requireContext().applicationContext
-
+        // Init db
         songDatabase = Room.databaseBuilder(
             requireContext(),
             SongDatabase::class.java,
             "songs.db"
         ).build()
 
+        //  Init viewmodel
         songViewModel = ViewModelProvider(
             this,
             SongViewModelFactory(songDatabase.songDao)
         )[SongViewModel::class.java]
 
+        playerViewModel = ViewModelProvider(requireActivity())[PlayerViewModel::class.java]
+
+        // Get songs
         viewLifecycleOwner.lifecycleScope.launch {
             launch {
                 songViewModel.newSongsState.collect { state ->
@@ -94,6 +98,30 @@ class HomeFragment : Fragment() {
                 }
             }
         }
+
+        // Miniplayer logic
+        playerViewModel.currentSong.observe(viewLifecycleOwner) { song ->
+            val container = binding.miniPlayerContainer
+
+            if (song != null) {
+                container.removeAllViews()
+
+                // Inflate the miniplayer layout
+                val miniPlayerView = layoutInflater.inflate(R.layout.miniplayer, container, false)
+                container.addView(miniPlayerView)
+                container.visibility = View.VISIBLE
+
+                // Fill in song data
+                miniPlayerView.findViewById<TextView>(R.id.songTitle).text = song.title
+                miniPlayerView.findViewById<TextView>(R.id.songArtist).text = song.artist
+
+                // TODO: Cover, pause button, add button, bg color, redirect to player
+            } else {
+                container.removeAllViews()
+                container.visibility = View.GONE
+            }
+        }
+
 
         // Toolbar & Navigation
         purritifyToolbar()
