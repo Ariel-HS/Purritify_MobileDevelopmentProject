@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -15,6 +16,7 @@ import androidx.fragment.app.Fragment
 import com.example.purritify.databinding.FragmentPlayerBinding
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.palette.graphics.Palette
 import androidx.room.Room
 import com.bumptech.glide.Glide
@@ -26,7 +28,9 @@ import com.example.purritify.ui.library.SongViewModel
 import com.example.purritify.ui.library.SongViewModelFactory
 import com.example.purritify.ui.player.PlayerViewModel
 import kotlinx.coroutines.launch
+import java.io.File
 import java.util.Locale
+import androidx.core.net.toUri
 
 class PlayerFragment : Fragment() {
     private var songId: Int = -1
@@ -73,24 +77,30 @@ class PlayerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // For testing
+        songId = 1
+
         // Get song
-        if (songId != -1) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                songViewModel.getSongById(songId).collect { song ->
-                    song?.let {
-                        currentSong = it
-                        Log.d("PlayerFragment", "Song loaded: $it")
-                    }
+        viewLifecycleOwner.lifecycleScope.launch {
+            songViewModel.getSongById(songId).collect { song ->
+                if (song == null) {
+                    Log.d("PlayerFragment", "No song found with id $songId")
+
+                    // Send back to home
+                    findNavController().popBackStack()
+                } else {
+                    currentSong = song
+                    Log.d("PlayerFragment", "Song loaded: $song")
+
+                    handleData()
+
+                    // Start player if not currently playing & not currently paused
+                    if (!playerViewModel.isPlaying() && playerViewModel.isPaused.value != true)
+                        playerViewModel.playSong(currentSong!!.pathFile.toUri())
                 }
             }
         }
 
-        // Start player if not currently playing & not currently paused
-        if (!playerViewModel.isPlaying() && playerViewModel.isPaused.value != true)
-            playerViewModel.playSong()
-
-        // Set cover
-        handleCover("TODO")
 
         // Handle pause button
         binding.pausePlayContainer.setOnClickListener { playerViewModel.togglePause() }
@@ -150,18 +160,36 @@ class PlayerFragment : Fragment() {
     }
 
     // ---------------------------------------------------------------- Handle Song Data  ----------------------------------------------------------------------------------
-    private fun handleCover(coverUri: String) {
-        // TODO: URI
-        binding.songCover.setImageResource(R.drawable.sample_cover)
+    private fun handleData() {
+        binding.songTitle.text = currentSong!!.title
+        binding.songArtist.text = currentSong!!.artist
 
-        adjustBGColor(coverUri)
+        handleCover(currentSong!!.pathArtwork)
+    }
+    private fun handleCover(coverPath: String) {
+        val file = File(coverPath)
+
+        if (file.exists()) {
+            val uri = Uri.fromFile(file)
+            Glide.with(requireContext())
+                .load(uri)
+                .into(binding.songCover)
+
+            adjustBGColor(uri)
+        } else {
+            Log.d("PlayerFragment", "Cover doesn't exist at $coverPath, defaulting to sample cover")
+
+            binding.songCover.setImageResource(R.drawable.sample_cover)
+            adjustBGColor(null)
+        }
     }
 
-    private fun adjustBGColor(coverUri: String) {
-        // TODO: URI
+    private fun adjustBGColor(coverUri: Uri?) {
+        val cover = coverUri ?: R.drawable.sample_cover
+
         Glide.with(requireContext())
             .asBitmap()
-            .load(R.drawable.sample_cover)
+            .load(cover)
             .into(object : CustomTarget<Bitmap>() {
                 override fun onResourceReady(bitmap: Bitmap, transition: Transition<in Bitmap>?) {
                     Palette.from(bitmap).generate { palette ->

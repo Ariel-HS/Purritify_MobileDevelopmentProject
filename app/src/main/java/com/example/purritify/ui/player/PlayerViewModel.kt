@@ -5,6 +5,7 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -36,16 +37,29 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         return mediaPlayer?.isPlaying == true
     }
 
-    fun playSong(uri: Uri = Uri.EMPTY) {
-        // TODO: URI
+    fun playSong(uri: Uri) {
         mediaPlayer?.release()
 
-        // For testing: always play the sample song
-        mediaPlayer = MediaPlayer.create(getApplication(), R.raw.sample).apply {
+        val context = getApplication<Application>()
+        val contentResolver = context.contentResolver
+        var tempMediaPlayer: MediaPlayer? = null
+
+        try {
+            contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+                tempMediaPlayer = MediaPlayer().apply {
+                    setDataSource(pfd.fileDescriptor)
+                    prepare()
+                }
+            }
+        } catch (_: Exception) {
+            Log.d("PlayerViewModel", "Song file doesn't exist at $uri, defaulting to sample")
+
+            tempMediaPlayer = MediaPlayer.create(context, R.raw.sample)
+        }
+
+        mediaPlayer = tempMediaPlayer?.apply {
             _duration.value = duration
-
             start()
-
             _isPaused.value = false
             handler.post(updateRunnable)
 
