@@ -47,4 +47,5 @@
     <string name="play_button">Play button</string>
     <string name="pause_button">Pause button</string>
     <string name="song_cover">Song cover</string>
+    <string name="home_horizontal_scroll_view">Song horizontal view</string>
 </resources>

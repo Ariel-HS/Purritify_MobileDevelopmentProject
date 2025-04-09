@@ -170,7 +170,7 @@ class HomeFragment : Fragment() {
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
 
-        loadSongsToContainer(recentlyPlayedSongs, binding.recentlyPlayedContainer, R.layout.library_song_card, params)
+        loadSongsToContainer(recentlyPlayedSongs, binding.recentlyPlayedContainer, R.layout.home_song_card, params)
     }
 
     private fun loadSongsToContainer(
