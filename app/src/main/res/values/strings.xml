@@ -48,4 +48,6 @@
     <string name="pause_button">Pause button</string>
     <string name="song_cover">Song cover</string>
     <string name="home_horizontal_scroll_view">Song horizontal view</string>
+    <string name="logout">Logout</string>
+    <string name="home_toolbar_hamburger_button">Hamburger menu button</string>
 </resources>

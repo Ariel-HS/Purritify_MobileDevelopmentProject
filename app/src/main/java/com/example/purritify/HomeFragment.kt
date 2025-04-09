@@ -1,5 +1,6 @@
 package com.example.purritify
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -21,6 +22,7 @@ import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDatabase
 import com.example.purritify.ui.library.SongViewModel
 import com.example.purritify.ui.library.SongViewModelFactory
+import com.example.purritify.ui.login.LoginActivity
 import com.example.purritify.ui.login.TokenManager
 import com.example.purritify.ui.player.MiniplayerView
 import com.example.purritify.ui.player.PlayerViewModel
@@ -116,37 +118,15 @@ class HomeFragment : Fragment() {
         val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
         miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, songViewModel)
 
-        // Toolbar & Navigation
-        purritifyToolbar()
+        binding.homeToolbar.logoutButton.setOnClickListener {
+            TokenManager.getInstance(requireContext()).clearUserEmail()
+            TokenManager.getInstance(requireContext()).clearToken()
 
-        val navController = findNavController()
-        binding.homeToolbar.setupWithNavController(navController)
-
-        val drawerLayout = binding.homeDrawerLayout
-        val toggle = ActionBarDrawerToggle(requireActivity(), drawerLayout, binding.homeToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-        drawerLayout.addDrawerListener(toggle)
-        toggle.syncState()
-
-        binding.homeNavView.setNavigationItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.profile -> {
-                    // TODO("handle profile")
-                }
-
-                R.id.home_sidebar_settings -> {
-                    // TODO("handle settings")
-                }
-            }
-
-            drawerLayout.closeDrawers()
-            true
+            startActivity(Intent(requireContext(), LoginActivity::class.java))
+            requireActivity().finish()
         }
-    }
 
-    private fun purritifyToolbar() {
-        val toolbar = binding.homeToolbar
 
-//         toolbar.setNavigationIcon(R.drawable)
     }
 
     private fun loadNewSongs() {
