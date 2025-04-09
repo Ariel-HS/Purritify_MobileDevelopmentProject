@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDao
 import com.example.purritify.data.room.SongEvent
+import com.example.purritify.ui.login.TokenManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +21,8 @@ import java.util.Date
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SongViewModel(
-    private val dao: SongDao
+    private val dao: SongDao,
+    private val userEmail: String
 ): ViewModel() {
 
 //    Isi Dummy Data
@@ -57,21 +59,21 @@ class SongViewModel(
     private val _songs = _isFilterLiked
         .flatMapLatest { isFilterLiked ->
             if (isFilterLiked) {
-                val temp: Flow<List<Song>> = dao.searchLiked()
+                val temp: Flow<List<Song>> = dao.searchLikedByEmail(userEmail)
                 Log.d("SongViewModel _songs Liked", temp.toString())
-                return@flatMapLatest dao.searchLiked()
+                return@flatMapLatest dao.searchLikedByEmail(userEmail)
             }
             else {
-                val temp: Flow<List<Song>> = dao.getAll()
+                val temp: Flow<List<Song>> = dao.getAllByUserEmail(userEmail)
                 Log.d("SongViewModel _songs", temp.toString())
 
-                return@flatMapLatest dao.getAll()
+                return@flatMapLatest dao.getAllByUserEmail(userEmail)
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList<Song>())
 
-    private val _newSongs = dao.getAllSortedByUploadDate().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList<Song>())
-    private val _recentlyPlayedSongs = dao.getRecentlyPlayed().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList<Song>())
+    private val _newSongs = dao.getAllSortedByUploadDateAndEmail(userEmail).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList<Song>())
+    private val _recentlyPlayedSongs = dao.getRecentlyPlayedByEmail(userEmail).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList<Song>())
 
     private val _state = MutableStateFlow(SongState())
     val state = combine(_state, _isFilterLiked, _songs) { state, isFilterLiked, songs ->
@@ -91,7 +93,7 @@ class SongViewModel(
 
     // Profile Statistics
     fun getSongCount(): Flow<Int> { return dao.getAll().map { songs -> songs.size }}
-    fun getLikedSongCount(): Flow<Int> { return dao.searchLiked().map { likedSongs -> likedSongs.size }}
+    fun getLikedSongCount(): Flow<Int> { return dao.searchLikedByEmail(userEmail).map { likedSongs -> likedSongs.size }}
     fun getListenedSongCount(): Flow<Int> { return dao.getAll().map { songs -> songs.count { it.lastPlayed != null }}}
 
     // Player
@@ -157,7 +159,8 @@ class SongViewModel(
                     duration = duration,
                     liked = false,
                     uploadDate = Date(),
-                    lastPlayed = null
+                    lastPlayed = null,
+                    userEmail = userEmail
                 )
 
                 viewModelScope.launch {

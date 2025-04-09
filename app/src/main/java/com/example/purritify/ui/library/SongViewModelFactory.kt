@@ -7,12 +7,16 @@ import com.example.purritify.data.LoginRepository
 import com.example.purritify.data.room.SongDao
 import com.example.purritify.ui.login.LoginViewModel
 
-class SongViewModelFactory(private val dao: SongDao) : ViewModelProvider.Factory {
+class SongViewModelFactory(
+    private val dao: SongDao,
+    private val email: String
+) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SongViewModel::class.java)) {
             return SongViewModel(
-                dao
+                dao,
+                email
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

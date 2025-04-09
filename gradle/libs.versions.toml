@@ -29,6 +29,7 @@ kotlinGradlePlugin = "2.1.10"
 ksp = "2.1.10-1.0.31"
 roomCommon = "2.6.1"
 paletteKtx = "1.0.0"
+palette = "1.0.0"
 
 [libraries]
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
@@ -57,6 +58,7 @@ androidx-room-compiler = { group = "androidx.room", name = "room-compiler", vers
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
 androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon" }
 androidx-palette-ktx = { group = "androidx.palette", name = "palette-ktx", version.ref = "paletteKtx" }
+androidx-palette = { group = "androidx.palette", name = "palette", version.ref = "palette" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

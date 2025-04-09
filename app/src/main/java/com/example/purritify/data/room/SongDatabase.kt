@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Song::class], version = 2)
+@Database(entities = [Song::class], version = 3)
 @TypeConverters(Converters::class)
 abstract class SongDatabase: RoomDatabase() {
     abstract val songDao: SongDao
@@ -24,16 +24,22 @@ abstract class SongDatabase: RoomDatabase() {
                     SongDatabase::class.java,
                     "song_db"
                 )
-                    .addMigrations(MIGRATION_1_2).build()
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
                 INSTANCE = instance
                 instance
             }
         }
 
         private val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE Song ADD COLUMN lastPlayed INTEGER")
-                database.execSQL("ALTER TABLE Song ADD COLUMN uploadDate INTEGER")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Song ADD COLUMN lastPlayed INTEGER")
+                db.execSQL("ALTER TABLE Song ADD COLUMN uploadDate INTEGER")
+            }
+        }
+
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Song ADD COLUMN userEmail TEXT")
             }
         }
     }

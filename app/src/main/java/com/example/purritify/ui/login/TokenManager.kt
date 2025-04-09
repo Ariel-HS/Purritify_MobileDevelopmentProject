@@ -11,7 +11,13 @@ class TokenManager private constructor(context: Context) {
 
     fun getToken(): String? { return prefs.getString("access_token", null) }
 
+    fun saveUserEmail(email: String) { prefs.edit { putString("user_email", email) } }
+
+    fun getUserEmail(): String? { return prefs.getString("user_email", null) }
+
     fun clearToken() { prefs.edit { remove("access_token") } }
+
+    fun clearUserEmail() { prefs.edit { remove("user_email") } }
 
     companion object {
         @Volatile

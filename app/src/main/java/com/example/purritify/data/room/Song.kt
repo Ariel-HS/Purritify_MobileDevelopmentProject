@@ -12,6 +12,7 @@ data class Song(
     val pathFile: String,
     val duration: String,
     val liked: Boolean,
+    val userEmail: String,
 
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,

@@ -1,6 +1,7 @@
 package com.example.purritify
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +13,7 @@ import com.example.purritify.databinding.FragmentHomeBinding
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
@@ -19,6 +21,7 @@ import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDatabase
 import com.example.purritify.ui.library.SongViewModel
 import com.example.purritify.ui.library.SongViewModelFactory
+import com.example.purritify.ui.login.TokenManager
 import com.example.purritify.ui.player.MiniplayerView
 import com.example.purritify.ui.player.PlayerViewModel
 import kotlinx.coroutines.launch
@@ -57,6 +60,15 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val userEmail = TokenManager.getInstance(requireContext()).getUserEmail()
+
+        if (userEmail.isNullOrEmpty()) {
+            Toast.makeText(requireContext(), "Invalid user email access", Toast.LENGTH_SHORT).show()
+            Log.d("HomeFragment", "Access while not logged in")
+
+            return
+        }
+
         // Init db
         songDatabase = Room.databaseBuilder(
             requireContext(),
@@ -67,7 +79,7 @@ class HomeFragment : Fragment() {
         //  Init viewmodel
         songViewModel = ViewModelProvider(
             this,
-            SongViewModelFactory(songDatabase.songDao)
+            SongViewModelFactory(songDatabase.songDao, userEmail)
         )[SongViewModel::class.java]
 
         playerViewModel = ViewModelProvider(requireActivity())[PlayerViewModel::class.java]

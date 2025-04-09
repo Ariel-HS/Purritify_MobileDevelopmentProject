@@ -42,6 +42,7 @@ android {
 dependencies {
     implementation(libs.androidx.palette.ktx)
     implementation(libs.glide)
+    implementation(libs.androidx.palette)
     ksp(libs.androidx.room.compiler)
     annotationProcessor(libs.androidx.room.compiler)
     implementation(libs.androidx.core.ktx)

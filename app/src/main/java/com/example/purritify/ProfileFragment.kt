@@ -14,6 +14,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -55,6 +56,15 @@ class ProfileFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val userEmail = TokenManager.getInstance(requireContext()).getUserEmail()
+
+        if (userEmail.isNullOrEmpty()) {
+            Toast.makeText(requireContext(), "Invalid user email access", Toast.LENGTH_SHORT).show()
+            Log.d("ProfileFragment", "Access while not logged in")
+
+            return
+        }
+
         // Init database
         songDatabase = Room.databaseBuilder(
             requireContext(),
@@ -66,7 +76,7 @@ class ProfileFragment : Fragment() {
         profileViewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
         songViewModel = ViewModelProvider(
             this,
-            SongViewModelFactory(songDatabase.songDao)
+            SongViewModelFactory(songDatabase.songDao, userEmail)
         )[SongViewModel::class.java]
 
         // Fetch profile from backend

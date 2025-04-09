@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,6 +21,7 @@ import com.example.purritify.ui.library.SongViewModel
 import com.example.purritify.ui.library.SongViewModelFactory
 import com.example.purritify.ui.library.dialog.DeleteSongDialogFragment
 import com.example.purritify.ui.library.dialog.EditSongDialogFragment
+import com.example.purritify.ui.login.TokenManager
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -43,13 +45,25 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val userEmail = TokenManager.getInstance(requireContext()).getUserEmail()
+
+        if (userEmail.isNullOrEmpty()) {
+            Toast.makeText(requireContext(), "Invalid user email access", Toast.LENGTH_SHORT).show()
+            Log.d("MyLibraryFragment", "Access while not logged in")
+
+            return
+        }
+
         songDatabase = Room.databaseBuilder(
             requireContext(),
             SongDatabase::class.java,
             "songs.db"
         ).build()
 
-        songViewModel = ViewModelProvider(this, SongViewModelFactory(songDatabase.songDao))[SongViewModel::class.java]
+        songViewModel = ViewModelProvider(
+            this,
+            SongViewModelFactory(songDatabase.songDao, userEmail)
+        )[SongViewModel::class.java]
     }
 
     override fun onCreateView(

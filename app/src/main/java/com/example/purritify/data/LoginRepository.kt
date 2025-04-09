@@ -41,6 +41,7 @@ class LoginRepository(val dataSource: LoginDataSource, private val tokenManager:
                 setLoggedInUser(result.data)
 
                 tokenManager.saveToken(result.data.token)
+                tokenManager.saveUserEmail(result.data.email)
             }
 
             return@withContext result

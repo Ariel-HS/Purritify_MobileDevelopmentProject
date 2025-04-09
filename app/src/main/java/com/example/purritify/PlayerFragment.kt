@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.purritify.databinding.FragmentPlayerBinding
@@ -21,6 +22,7 @@ import com.example.purritify.ui.player.PlayerViewModel
 import kotlinx.coroutines.launch
 import java.util.Locale
 import androidx.core.net.toUri
+import com.example.purritify.ui.login.TokenManager
 import com.example.purritify.ui.player.animatePauseIcon
 import com.example.purritify.ui.player.handleCover
 import com.example.purritify.ui.player.handleLike
@@ -33,6 +35,8 @@ class PlayerFragment : Fragment() {
     private var songId: Int = -1
     private var currentSong: Song? = null
 
+    private var userEmail: String = ""
+
     private lateinit var binding: FragmentPlayerBinding
     private lateinit var playerViewModel: PlayerViewModel
 
@@ -44,6 +48,9 @@ class PlayerFragment : Fragment() {
         super.onCreate(savedInstanceState)
         arguments?.let {
             songId = it.getInt("arg_song_id", -1)
+
+            // temp
+            userEmail = it.getString("user_email", "")
         }
 
         // Init database
@@ -57,7 +64,7 @@ class PlayerFragment : Fragment() {
         playerViewModel = ViewModelProvider(requireActivity())[PlayerViewModel::class.java]
         songViewModel = ViewModelProvider(
             this,
-            SongViewModelFactory(songDatabase.songDao)
+            SongViewModelFactory(songDatabase.songDao, userEmail)
         )[SongViewModel::class.java]
     }
 
@@ -186,11 +193,15 @@ class PlayerFragment : Fragment() {
 
     companion object {
         private const val ARG_SONG_ID = "arg_song_id"
+        private const val USER_EMAIL = "user_email"
 
-        fun newInstance(songId: Int): PlayerFragment {
+        fun newInstance(songId: Int, email: String): PlayerFragment {
             val fragment = PlayerFragment()
             val args = Bundle().apply {
                 putInt(ARG_SONG_ID, songId)
+
+                // temp
+                putString(USER_EMAIL, email)
             }
 
             fragment.arguments = args
