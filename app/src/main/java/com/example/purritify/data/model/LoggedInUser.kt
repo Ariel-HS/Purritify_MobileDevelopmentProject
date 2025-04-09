@@ -5,5 +5,6 @@ package com.example.purritify.data.model
  */
 data class LoggedInUser(
     val email: String,
-    val token: String
+    val token: String,
+    val refreshToken: String,
 )

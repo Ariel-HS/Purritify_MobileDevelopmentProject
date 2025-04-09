@@ -118,9 +118,18 @@ class HomeFragment : Fragment() {
         val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
         miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, songViewModel)
 
+        // Logout
         binding.homeToolbar.logoutButton.setOnClickListener {
-            TokenManager.getInstance(requireContext()).clearUserEmail()
-            TokenManager.getInstance(requireContext()).clearToken()
+            val tokenManager = TokenManager.getInstance(requireContext())
+
+            Log.d("HomeFragment", "Logging out, clearing tokens")
+            tokenManager.clearUserEmail()
+            tokenManager.clearToken()
+            tokenManager.clearRefreshToken()
+            Log.d("LoginRepository", "Clearing tokens finished")
+            Log.d("HomeFragment", "Access Token: ${tokenManager.getToken()}")
+            Log.d("HomeFragment", "Refresh Token: ${tokenManager.getRefreshToken()}")
+            Log.d("HomeFragment", "User Email: ${tokenManager.getUserEmail()}")
 
             startActivity(Intent(requireContext(), LoginActivity::class.java))
             requireActivity().finish()

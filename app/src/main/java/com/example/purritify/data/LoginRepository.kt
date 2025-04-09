@@ -40,8 +40,14 @@ class LoginRepository(val dataSource: LoginDataSource, private val tokenManager:
             if (result is Result.Success) {
                 setLoggedInUser(result.data)
 
+                Log.d("LoginRepository", "Logging in, saving tokens")
                 tokenManager.saveToken(result.data.token)
+                tokenManager.saveRefreshToken(result.data.refreshToken)
                 tokenManager.saveUserEmail(result.data.email)
+                Log.d("LoginRepository", "Saving tokens finished")
+                Log.d("LoginRepository", "Access Token: ${tokenManager.getToken()}")
+                Log.d("LoginRepository", "Refresh Token: ${tokenManager.getRefreshToken()}")
+                Log.d("LoginRepository", "User Email: ${tokenManager.getUserEmail()}")
             }
 
             return@withContext result

@@ -36,8 +36,12 @@ class LoginDataSource {
                 if (response.isSuccessful) {
                     Log.d("LoginDataSource", "Response success")
                     val loginResponse: LoginResponse = response.body()!!
-                    val fakeUser = LoggedInUser(email = email, token = loginResponse.accessToken)
-                    Result.Success(fakeUser)
+                    val user = LoggedInUser(
+                        email = email,
+                        token = loginResponse.accessToken,
+                        refreshToken = loginResponse.refreshToken
+                    )
+                    Result.Success(user)
                 }
                 else {
                     Log.d("LoginDataSource", "Response fail")

@@ -11,11 +11,17 @@ class TokenManager private constructor(context: Context) {
 
     fun getToken(): String? { return prefs.getString("access_token", null) }
 
+    fun saveRefreshToken(token: String) { prefs.edit { putString("refresh_token", token) } }
+
+    fun getRefreshToken(): String? { return prefs.getString("refresh_token", null) }
+
     fun saveUserEmail(email: String) { prefs.edit { putString("user_email", email) } }
 
     fun getUserEmail(): String? { return prefs.getString("user_email", null) }
 
     fun clearToken() { prefs.edit { remove("access_token") } }
+
+    fun clearRefreshToken() { prefs.edit { remove("refresh_token") } }
 
     fun clearUserEmail() { prefs.edit { remove("user_email") } }
 
