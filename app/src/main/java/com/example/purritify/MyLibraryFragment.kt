@@ -22,6 +22,7 @@ import com.example.purritify.ui.library.SongViewModelFactory
 import com.example.purritify.ui.library.dialog.DeleteSongDialogFragment
 import com.example.purritify.ui.library.dialog.EditSongDialogFragment
 import com.example.purritify.ui.login.TokenManager
+import com.google.android.material.chip.ChipGroup
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -78,7 +79,7 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
         super.onViewCreated(view, savedInstanceState)
 
         setupRecyclerView()
-        // setupChipGroup()
+        setupChipGroup()
         setupFloatingActionButton()
     }
 
@@ -102,18 +103,16 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
     }
 
     private fun setupChipGroup() {
-        binding.myLibraryChipAll.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                songViewModel.onEvent(SongEvent.IsFilterLiked(false))
-                // binding.myLibraryChipLiked.isChecked = false
-            }
+        binding.myLibraryChipAll.setOnClickListener {
+            binding.myLibraryChipAll.isChecked = true
+            binding.myLibraryChipLiked.isChecked = false
+            songViewModel.onEvent(SongEvent.IsFilterLiked(false))
         }
 
-        binding.myLibraryChipLiked.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                songViewModel.onEvent(SongEvent.IsFilterLiked(true))
-//                binding.myLibraryChipAll.isChecked = false
-            }
+        binding.myLibraryChipLiked.setOnClickListener {
+            binding.myLibraryChipLiked.isChecked = true
+            binding.myLibraryChipAll.isChecked = false
+            songViewModel.onEvent(SongEvent.IsFilterLiked(true))
         }
     }
 

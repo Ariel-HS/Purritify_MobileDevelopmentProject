@@ -118,6 +118,7 @@ class SongViewModel(
     }
 
     fun onEvent(event: SongEvent) {
+        Log.d("SongViewModel", event.toString())
         when (event) {
             is SongEvent.DeleteSong -> {
                 viewModelScope.launch {
@@ -135,6 +136,7 @@ class SongViewModel(
                 ) }
             }
             is SongEvent.IsFilterLiked -> {
+                Log.d("SongViewModel", "Liked: ${event.liked}")
                 _isFilterLiked.value = event.liked
             }
             SongEvent.SaveSong -> {
