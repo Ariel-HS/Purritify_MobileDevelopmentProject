@@ -9,7 +9,11 @@
         android:id="@+id/home_page"
         android:name="com.example.purritify.HomeFragment"
         android:label="fragment_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_home_to_player"
+            app:destination="@id/player"/>
+    </fragment>
     <fragment
         android:id="@+id/my_library"
         android:name="com.example.purritify.MyLibraryFragment"
@@ -20,4 +24,14 @@
         android:name="com.example.purritify.ProfileFragment"
         android:label="fragment_profile"
         tools:layout="@layout/fragment_profile" />
+    <fragment
+        android:id="@+id/player"
+        android:name="com.example.purritify.PlayerFragment"
+        android:label="fragment_profile"
+        tools:layout="@layout/fragment_player">
+            <argument
+                android:name="songId"
+                app:argType="integer"
+                android:defaultValue="-1"/>
+    </fragment>
 </navigation>
