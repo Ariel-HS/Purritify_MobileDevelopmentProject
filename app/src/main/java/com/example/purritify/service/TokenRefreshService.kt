@@ -26,7 +26,7 @@ class TokenRefreshService : Service() {
 
     companion object {
         // Check token every 4 minutes (token expires in 5 minutes)
-        private val CHECK_INTERVAL = TimeUnit.MINUTES.toMillis(1)
+        private val CHECK_INTERVAL = TimeUnit.MINUTES.toMillis(4)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -52,21 +52,16 @@ class TokenRefreshService : Service() {
             while (isActive) {
                 Log.d(TAG, "Checking token at ${System.currentTimeMillis()}")
                 val tokenManager = TokenManager.getInstance(applicationContext)
-                val token = tokenManager.getToken()
+                val refreshToken = tokenManager.getRefreshToken()
 
-                if (token != null) {
-                    if (!verifyToken(token)) {
-                        Log.d(TAG, "Token expired, attempting to refresh")
-                        refreshToken(tokenManager)
-                    } else {
-                        Log.d(TAG, "Token is still valid")
-                        _tokenStatus.postValue(TokenStatus.VALID)
-                    }
+                if (refreshToken != null) {
+                    Log.d(TAG, "Refresh token found, attempting to refresh")
+                    refreshToken(tokenManager)
                 } else {
-                    Log.d(TAG, "No token found")
+                    Log.d(TAG, "No refresh token found")
                     _tokenStatus.postValue(TokenStatus.MISSING)
 
-                    // Stop service when no token is found
+                    // Stop service when no refresh token is found
                     stopSelf()
                     return@launch
                 }
