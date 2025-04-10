@@ -60,15 +60,14 @@
                 android:scrollbars="none"
                 android:layout_marginTop="20dp"
                 android:layout_marginBottom="6dp"
-                android:contentDescription="@string/home_horizontal_scroll_view"
-                >
+                android:descendantFocusability="afterDescendants"
+                android:contentDescription="@string/home_horizontal_scroll_view">
 
                 <LinearLayout
                     android:id="@+id/new_song_container"
                     android:layout_width="wrap_content"
                     android:layout_height="132dp"
-                    android:orientation="horizontal"/>
-
+                    android:orientation="horizontal" />
             </HorizontalScrollView>
 
 <!--            Recently Played-->

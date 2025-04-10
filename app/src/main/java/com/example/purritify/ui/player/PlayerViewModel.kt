@@ -11,6 +11,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.purritify.R
 import com.example.purritify.data.room.Song
+import com.example.purritify.ui.library.SongViewModel
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -46,7 +47,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         return mediaPlayer?.isPlaying == true
     }
 
-    fun playSong(uri: Uri) {
+    fun playSong(uri: Uri, songViewModel: SongViewModel) {
         mediaPlayer?.release()
 
         val context = getApplication<Application>()
@@ -76,6 +77,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 _isPaused.value = true
             }
         }
+
+        // Update lastPlayed value ini db
+        currentSong.value?.let { handleLastPlayedUpdate(it, songViewModel, this) }
     }
 
     fun togglePause() {

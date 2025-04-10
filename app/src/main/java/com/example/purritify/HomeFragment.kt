@@ -1,6 +1,8 @@
 package com.example.purritify
 
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -18,6 +20,7 @@ import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
+import com.bumptech.glide.Glide
 import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDatabase
 import com.example.purritify.ui.library.SongViewModel
@@ -26,7 +29,9 @@ import com.example.purritify.ui.login.LoginActivity
 import com.example.purritify.ui.login.TokenManager
 import com.example.purritify.ui.player.MiniplayerView
 import com.example.purritify.ui.player.PlayerViewModel
+import com.example.purritify.ui.player.adjustBGColor
 import kotlinx.coroutines.launch
+import java.io.File
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -162,8 +167,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadRecentlyPlayed() {
-        val density = resources.displayMetrics.density
-
         val params = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -191,11 +194,34 @@ class HomeFragment : Fragment() {
             // Set data
             title.text = song.title
             artist.text = song.artist
-            cover.setImageResource(R.drawable.sample_cover) // TODO: Sample cover
+            loadCover(song.pathFile, cover)
+
+            // Redirect to player fragment
+            songView.setOnClickListener {
+                val action = HomeFragmentDirections.actionHomeToPlayer(
+                    songId = song.id,
+                )
+                findNavController().navigate(action)
+            }
 
             // Display containers
             songView.layoutParams = layoutParams
             container.addView(songView)
+        }
+    }
+
+    private fun loadCover(coverPath: String, coverView: ImageView) {
+        val file = File(coverPath)
+
+        if (file.exists()) {
+            val uri = Uri.fromFile(file)
+            Glide.with(requireContext())
+                .load(uri)
+                .into(coverView)
+        } else {
+            Log.d("HomeFragment", "Cover doesn't exist at $coverPath, defaulting to sample cover")
+
+            coverView.setImageResource(R.drawable.sample_cover)
         }
     }
 }

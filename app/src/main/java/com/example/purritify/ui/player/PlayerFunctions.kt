@@ -20,6 +20,7 @@ import com.example.purritify.data.room.SongEvent
 import com.example.purritify.ui.library.SongViewModel
 import com.google.android.material.card.MaterialCardView
 import java.io.File
+import java.util.Date
 
 fun handleCover(context: Context, coverPath: String, coverView: ImageView, backgroundView: View, tag: String) {
     // Load song cover then adjusts the background color to the dominant color of the cover
@@ -98,6 +99,14 @@ fun animatePauseIcon(isPaused: Boolean, playIconView: ImageView, pauseIconView: 
 
 fun handleLike(song: Song, songViewModel: SongViewModel, playerViewModel: PlayerViewModel) {
     val updatedSong = song.copy(liked = !song.liked)
+
+    songViewModel.onEvent(SongEvent.UpsertSong(updatedSong))
+
+    playerViewModel.setCurrentSong(updatedSong)
+}
+
+fun handleLastPlayedUpdate(song: Song, songViewModel: SongViewModel, playerViewModel: PlayerViewModel) {
+    val updatedSong = song.copy(lastPlayed = Date())
 
     songViewModel.onEvent(SongEvent.UpsertSong(updatedSong))
 

@@ -25,34 +25,36 @@ class SongViewModel(
     private val userEmail: String
 ): ViewModel() {
 
-//    Isi Dummy Data
-//    init {
-//        viewModelScope.launch {
-//            val dummySongs = listOf(
-//                Song(
-//                    title = "Lofi Dreams",
-//                    artist = "Chillhop",
-//                    pathArtwork = "/storage/emulated/0/Music/artwork1.jpg",
-//                    pathFile = "/storage/emulated/0/Music/song1.mp3",
-//                    duration = "2:30",
-//                    liked = true,
-//                    lastPlayed = null,
-//                    uploadDate = Date()
-//                ),
-//                Song(
-//                    title = "Rainy Night",
-//                    artist = "Lofigirl",
-//                    pathArtwork = "/storage/emulated/0/Music/artwork2.jpg",
-//                    pathFile = "/storage/emulated/0/Music/song2.mp3",
-//                    duration = "3:45",
-//                    liked = false,
-//                    lastPlayed = null,
-//                    uploadDate = Date()
-//                )
-//            )
-//            dummySongs.forEach { dao.upsertSong(it) }
-//        }
-//    }
+    //    Isi Dummy Data
+    //    init {
+    //        viewModelScope.launch {
+    //            val dummySongs = listOf(
+    //                Song(
+    //                    title = "Lofi Dreams",
+    //                    artist = "Chillhop",
+    //                    pathArtwork = "/storage/emulated/0/Music/artwork1.jpg",
+    //                    pathFile = "/storage/emulated/0/Music/song1.mp3",
+    //                    duration = "2:30",
+    //                    liked = true,
+    //                    lastPlayed = null,
+    //                    uploadDate = Date(),
+    //                    userEmail = "13522056@std.stei.itb.ac.id"
+    //                ),
+    //                Song(
+    //                    title = "Rainy Night",
+    //                    artist = "Lofigirl",
+    //                    pathArtwork = "/storage/emulated/0/Music/artwork2.jpg",
+    //                    pathFile = "/storage/emulated/0/Music/song2.mp3",
+    //                    duration = "3:45",
+    //                    liked = false,
+    //                    lastPlayed = null,
+    //                    uploadDate = Date(),
+    //                    userEmail = "13522056@std.stei.itb.ac.id"
+    //                )
+    //            )
+    //            dummySongs.forEach { dao.upsertSong(it) }
+    //        }
+    //    }
 
     private val _isFilterLiked = MutableStateFlow(false)
 
@@ -92,15 +94,15 @@ class SongViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SongState())
 
     // Profile Statistics
-    fun getSongCount(): Flow<Int> { return dao.getAll().map { songs -> songs.size }}
+    fun getSongCount(): Flow<Int> { return dao.getAllSortedByUploadDateAndEmail(userEmail).map { songs -> songs.size }}
     fun getLikedSongCount(): Flow<Int> { return dao.searchLikedByEmail(userEmail).map { likedSongs -> likedSongs.size }}
-    fun getListenedSongCount(): Flow<Int> { return dao.getAll().map { songs -> songs.count { it.lastPlayed != null }}}
+    fun getListenedSongCount(): Flow<Int> { return dao.getAllSortedByUploadDateAndEmail(userEmail).map { songs -> songs.count { it.lastPlayed != null }}}
 
     // Player
     fun getSongById(id: Int): Flow<Song?> { return dao.getSongById(id) }
 
     suspend fun getNextSong(currentSongId: Int): Song? {
-        val sortedSongs = dao.getAllSortedByUploadDateOnce()
+        val sortedSongs = dao.getAllSortedByUploadDateOnce(userEmail)
 
         val currentIndex = sortedSongs.indexOfFirst { it.id == currentSongId }
         Log.d("SongViewModel", "Current song index: $currentIndex, switching to ${if (currentIndex != -1 && currentIndex + 1 < sortedSongs.size) { sortedSongs[currentIndex + 1] } else null}")
@@ -109,7 +111,7 @@ class SongViewModel(
     }
 
     suspend fun getPreviousSong(currentSongId: Int): Song? {
-        val sortedSongs = dao.getAllSortedByUploadDateOnce()
+        val sortedSongs = dao.getAllSortedByUploadDateOnce(userEmail)
 
         val currentIndex = sortedSongs.indexOfFirst { it.id == currentSongId }
         Log.d("SongViewModel", "Current song index: $currentIndex, switching to ${if (currentIndex > 0) { sortedSongs[currentIndex - 1] } else null}")

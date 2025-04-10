@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.purritify.databinding.FragmentPlayerBinding
@@ -22,7 +21,7 @@ import com.example.purritify.ui.player.PlayerViewModel
 import kotlinx.coroutines.launch
 import java.util.Locale
 import androidx.core.net.toUri
-import com.example.purritify.ui.login.TokenManager
+import androidx.navigation.fragment.navArgs
 import com.example.purritify.ui.player.animatePauseIcon
 import com.example.purritify.ui.player.handleCover
 import com.example.purritify.ui.player.handleLike
@@ -32,6 +31,7 @@ enum class Direction {
 }
 
 class PlayerFragment : Fragment() {
+    private val args: PlayerFragmentArgs by navArgs()
     private var songId: Int = -1
     private var currentSong: Song? = null
 
@@ -46,12 +46,9 @@ class PlayerFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            songId = it.getInt("arg_song_id", -1)
 
-            // temp
-            userEmail = it.getString("user_email", "")
-        }
+        // Get arguments
+        songId = args.songId
 
         // Init database
         songDatabase = Room.databaseBuilder(
@@ -84,9 +81,6 @@ class PlayerFragment : Fragment() {
         // Handle close button
         binding.closeButton.setOnClickListener { findNavController().popBackStack() }
 
-        // For testing
-        songId = 1
-
         // Get song
         viewLifecycleOwner.lifecycleScope.launch {
             songViewModel.getSongById(songId).collect { song ->
@@ -105,9 +99,13 @@ class PlayerFragment : Fragment() {
                 handleData()
 
                 // Start player if not currently playing & not currently paused
-                if (!playerViewModel.isPlaying() && playerViewModel.isPaused.value != true) {
-                    playerViewModel.setCurrentSong(currentSong!!)
-                    playerViewModel.playSong(currentSong!!.pathFile.toUri())
+                if (!playerViewModel.isPlaying() && playerViewModel.isPaused.value != true) playSong()
+
+                // Restart player if songId is different than currentSong
+                if (playerViewModel.isPlaying()) {
+                    val currentlyPlaying = playerViewModel.currentSong.value
+
+                    if (currentlyPlaying == null || currentlyPlaying.id != currentSong?.id) playSong()
                 }
 
                 // Handle pause button
@@ -149,6 +147,11 @@ class PlayerFragment : Fragment() {
 
     // ---------------------------------------------------------------- Handle Song Playing ----------------------------------------------------------------------------------
 
+    private fun playSong() {
+        playerViewModel.setCurrentSong(currentSong!!)
+        playerViewModel.playSong(currentSong!!.pathFile.toUri(), songViewModel)
+    }
+
     private fun handleTime(ms: Int): String {
         val totalSec = ms / 1000
 
@@ -174,7 +177,7 @@ class PlayerFragment : Fragment() {
                 handleData()
 
                 playerViewModel.setCurrentSong(nextSong)
-                playerViewModel.playSong(nextSong.pathFile.toUri())
+                playerViewModel.playSong(nextSong.pathFile.toUri(), songViewModel)
             }
         }
     }
@@ -190,23 +193,4 @@ class PlayerFragment : Fragment() {
     // ---------------------------------------------------------------- Other  ----------------------------------------------------------------------------------
 
     private fun setupLikeButton() { binding.heartButton.background = if (currentSong!!.liked) ContextCompat.getDrawable(requireContext(), R.drawable.heart_filled) else null }
-
-    companion object {
-        private const val ARG_SONG_ID = "arg_song_id"
-        private const val USER_EMAIL = "user_email"
-
-        fun newInstance(songId: Int, email: String): PlayerFragment {
-            val fragment = PlayerFragment()
-            val args = Bundle().apply {
-                putInt(ARG_SONG_ID, songId)
-
-                // temp
-                putString(USER_EMAIL, email)
-            }
-
-            fragment.arguments = args
-
-            return fragment
-        }
-    }
 }
