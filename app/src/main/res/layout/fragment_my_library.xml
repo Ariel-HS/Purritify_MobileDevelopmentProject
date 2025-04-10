@@ -63,7 +63,9 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView"
-        app:singleSelection="true">
+        app:singleSelection="true"
+        app:selectionRequired="true"
+        >
 
         <com.google.android.material.chip.Chip
             android:id="@+id/my_library_chip_all"
@@ -72,17 +74,19 @@
             android:checkable="true"
             android:checked="true"
             android:text="@string/all"
-            app:chipBackgroundColor="#1DB954" />
+            app:chipBackgroundColor="@color/library_chip_background_selected"
+            android:textColor="@color/library_chip_text_selected"
+            />
 
         <com.google.android.material.chip.Chip
             android:id="@+id/my_library_chip_liked"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checkable="true"
-            android:checked="true"
             android:text="@string/liked"
-            android:textColor="@color/white"
-            app:chipBackgroundColor="#212121" />
+            android:textColor="@color/library_chip_text_selected"
+            app:chipBackgroundColor="@color/library_chip_background_selected"
+            />
     </com.google.android.material.chip.ChipGroup>
 
     <androidx.recyclerview.widget.RecyclerView
