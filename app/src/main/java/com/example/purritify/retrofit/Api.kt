@@ -3,6 +3,9 @@ package com.example.purritify.retrofit
 import com.example.purritify.data.model.LoginRequest
 import com.example.purritify.data.model.LoginResponse
 import com.example.purritify.data.model.ProfileResponse
+import com.example.purritify.data.model.RefreshTokenRequest
+import com.example.purritify.data.model.RefreshTokenResponse
+import com.example.purritify.data.model.TokenVerifyResponse
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -22,6 +25,16 @@ interface Api {
     fun fetchProfile(
         @Header("Authorization") token: String
     ): Call<ProfileResponse>
+
+    @GET("api/verify-token")
+    suspend fun verifyToken(
+        @Header("Authorization") authHeader: String
+    ): Response<TokenVerifyResponse>
+
+    @POST("api/refresh-token")
+    suspend fun refreshToken(
+        @Body refreshTokenRequest: RefreshTokenRequest
+    ): Response<RefreshTokenResponse>
 
     companion object {
         const val BASE_URL: String = "http://34.101.226.132:3000"

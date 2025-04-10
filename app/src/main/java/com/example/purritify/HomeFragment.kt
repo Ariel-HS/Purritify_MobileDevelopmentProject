@@ -120,22 +120,32 @@ class HomeFragment : Fragment() {
 
         // Logout
         binding.homeToolbar.logoutButton.setOnClickListener {
-            val tokenManager = TokenManager.getInstance(requireContext())
-
-            Log.d("HomeFragment", "Logging out, clearing tokens")
-            tokenManager.clearUserEmail()
-            tokenManager.clearToken()
-            tokenManager.clearRefreshToken()
-            Log.d("LoginRepository", "Clearing tokens finished")
-            Log.d("HomeFragment", "Access Token: ${tokenManager.getToken()}")
-            Log.d("HomeFragment", "Refresh Token: ${tokenManager.getRefreshToken()}")
-            Log.d("HomeFragment", "User Email: ${tokenManager.getUserEmail()}")
-
-            startActivity(Intent(requireContext(), LoginActivity::class.java))
-            requireActivity().finish()
+            logout()
         }
 
 
+    }
+
+    private fun logout() {
+        val tokenManager = TokenManager.getInstance(requireContext())
+
+        // Clear tokens
+        Log.d("HomeFragment", "Logging out, clearing tokens")
+        tokenManager.clearUserEmail()
+        tokenManager.clearToken()
+        tokenManager.clearRefreshToken()
+        Log.d("HomeFragment", "Access Token: ${tokenManager.getToken()}")
+        Log.d("HomeFragment", "Refresh Token: ${tokenManager.getRefreshToken()}")
+        Log.d("HomeFragment", "User Email: ${tokenManager.getUserEmail()}")
+
+        // Stop token refresh service
+        (activity as? MainActivity)?.stopTokenRefreshService()
+
+        // Navigate to login
+        val intent = Intent(requireContext(), LoginActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivity(intent)
+        requireActivity().finish()
     }
 
     private fun loadNewSongs() {

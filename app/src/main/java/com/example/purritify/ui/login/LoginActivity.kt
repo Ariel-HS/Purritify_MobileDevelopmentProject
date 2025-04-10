@@ -28,6 +28,15 @@ class LoginActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
+        // Check if user is already logged in
+        val tokenManager = TokenManager.getInstance(applicationContext)
+        if (tokenManager.getToken() != null) {
+            // User already logged in, go directly to MainActivity
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
+
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -105,14 +114,17 @@ class LoginActivity : AppCompatActivity() {
     private fun updateUiWithUser(model: LoggedInUserView) {
         val welcome = getString(R.string.welcome)
         val displayName = model.email
-        // TODO : initiate successful logged in experience
         Toast.makeText(
             applicationContext,
             "$welcome $displayName",
             Toast.LENGTH_LONG
         ).show()
 
-        startActivity(Intent(this, MainActivity::class.java))
+        // Add flags to clear back stack
+        val intent = Intent(this, MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivity(intent)
+        finish()
     }
 
     private fun showLoginFailed(@StringRes errorString: Int) {
