@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.room.Room
 import com.example.purritify.data.room.Song
@@ -22,6 +23,8 @@ import com.example.purritify.ui.library.SongViewModelFactory
 import com.example.purritify.ui.library.dialog.DeleteSongDialogFragment
 import com.example.purritify.ui.library.dialog.EditSongDialogFragment
 import com.example.purritify.ui.login.TokenManager
+import com.example.purritify.ui.player.MiniplayerView
+import com.example.purritify.ui.player.PlayerViewModel
 import com.google.android.material.chip.ChipGroup
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -42,6 +45,8 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
     private lateinit var songViewModel: SongViewModel
 
     private lateinit var songAdapter: SongAdapter
+
+    private lateinit var playerViewModel: PlayerViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,6 +70,8 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
             this,
             SongViewModelFactory(songDatabase.songDao, userEmail)
         )[SongViewModel::class.java]
+
+        playerViewModel = ViewModelProvider(requireActivity())[PlayerViewModel::class.java]
     }
 
     override fun onCreateView(
@@ -81,6 +88,13 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
         setupRecyclerView()
         setupChipGroup()
         setupFloatingActionButton()
+
+        // Miniplayer logic
+        val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
+        miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, songViewModel) {
+            val action = MyLibraryFragmentDirections.actionLibraryToPlayer(songId = it.id)
+            findNavController().navigate(action)
+        }
     }
 
     private fun setupRecyclerView() {
@@ -163,7 +177,10 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
     }
 
     override fun onItemClickListener(song: Song) {
-        TODO("Not yet implemented")
+        val action = HomeFragmentDirections.actionHomeToPlayer(
+            songId = song.id,
+        )
+        findNavController().navigate(action)
     }
 
     override fun onLikeButtonClickListener(song: Song) {

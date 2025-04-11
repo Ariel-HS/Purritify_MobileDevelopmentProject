@@ -18,12 +18,20 @@
         android:id="@+id/my_library"
         android:name="com.example.purritify.MyLibraryFragment"
         android:label="fragment_my_library"
-        tools:layout="@layout/fragment_my_library" />
+        tools:layout="@layout/fragment_my_library">
+        <action
+            android:id="@+id/action_library_to_player"
+            app:destination="@id/player"/>
+    </fragment>
     <fragment
         android:id="@+id/profile"
         android:name="com.example.purritify.ProfileFragment"
         android:label="fragment_profile"
-        tools:layout="@layout/fragment_profile" />
+        tools:layout="@layout/fragment_profile">
+        <action
+            android:id="@+id/action_profile_to_player"
+            app:destination="@id/player"/>
+    </fragment>
     <fragment
         android:id="@+id/player"
         android:name="com.example.purritify.PlayerFragment"

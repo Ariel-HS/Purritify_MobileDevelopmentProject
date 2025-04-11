@@ -19,6 +19,7 @@ import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.palette.graphics.Palette
 import androidx.room.Room
 import com.bumptech.glide.Glide
@@ -30,6 +31,8 @@ import com.example.purritify.retrofit.Api
 import com.example.purritify.ui.library.SongViewModel
 import com.example.purritify.ui.library.SongViewModelFactory
 import com.example.purritify.ui.login.TokenManager
+import com.example.purritify.ui.player.MiniplayerView
+import com.example.purritify.ui.player.PlayerViewModel
 import com.example.purritify.ui.profile.ProfileViewModel
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -48,6 +51,7 @@ class ProfileFragment : Fragment() {
     private lateinit var songDatabase: SongDatabase
     private lateinit var profileViewModel: ProfileViewModel
     private lateinit var songViewModel: SongViewModel
+    private lateinit var playerViewModel: PlayerViewModel
 
     private var songs: Int = 0
     private var liked: Int = 0
@@ -84,6 +88,8 @@ class ProfileFragment : Fragment() {
         token?.let {
             profileViewModel.fetchProfile("Bearer $it")
         } ?: Log.d("ProfileFragment", "Token not found.")
+
+        playerViewModel = ViewModelProvider(requireActivity())[PlayerViewModel::class.java]
     }
 
     override fun onCreateView(
@@ -123,6 +129,13 @@ class ProfileFragment : Fragment() {
 
             // Display data
             loadStatistics()
+        }
+
+        // Miniplayer logic
+        val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
+        miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, songViewModel) {
+            val action = ProfileFragmentDirections.actionProfileToPlayer(songId = it.id)
+            findNavController().navigate(action)
         }
     }
 
