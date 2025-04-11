@@ -12,6 +12,11 @@
     android:layout_gravity="center"
     android:clipToPadding="false"
     android:clipChildren="false"
+
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+
     app:strokeWidth="0dp"
     app:cardBackgroundColor="@color/black">
 
@@ -83,6 +88,7 @@
             <!-- Add Button -->
             <ImageButton
                 android:id="@+id/addButton"
+                android:contentDescription="@string/liked"
                 android:src="@drawable/like"
                 android:background="@android:color/transparent"
                 android:layout_width="16dp"
