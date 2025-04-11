@@ -25,7 +25,7 @@ class TokenRefreshService : Service() {
     private var monitorJob: Job? = null
 
     companion object {
-        // Check token every 4 minutes (token expires in 5 minutes)
+        // Check token time interval
         private val CHECK_INTERVAL = TimeUnit.MINUTES.toMillis(4)
     }
 

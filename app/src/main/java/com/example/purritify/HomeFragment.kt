@@ -1,6 +1,7 @@
 package com.example.purritify
 
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -21,6 +22,7 @@ import androidx.room.Room
 import com.bumptech.glide.Glide
 import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDatabase
+import com.example.purritify.network.NetworkStatusViewModel
 import com.example.purritify.ui.library.SongViewModel
 import com.example.purritify.ui.library.SongViewModelFactory
 import com.example.purritify.ui.login.LoginActivity
@@ -29,6 +31,7 @@ import com.example.purritify.ui.player.MiniplayerView
 import com.example.purritify.ui.player.PlayerViewModel
 import kotlinx.coroutines.launch
 import java.io.File
+import androidx.core.graphics.toColorInt
 
 class HomeFragment : Fragment() {
 
@@ -38,6 +41,7 @@ class HomeFragment : Fragment() {
 
     private lateinit var songViewModel: SongViewModel
     private lateinit var playerViewModel: PlayerViewModel
+    private lateinit var networkStatusViewModel: NetworkStatusViewModel
 
     private var newSongs: List<Song> = emptyList()
     private var recentlyPlayedSongs: List<Song> = emptyList()
@@ -77,6 +81,12 @@ class HomeFragment : Fragment() {
         )[SongViewModel::class.java]
 
         playerViewModel = ViewModelProvider(requireActivity())[PlayerViewModel::class.java]
+
+        // Initialize network status viewmodel
+        networkStatusViewModel = ViewModelProvider(requireActivity())[NetworkStatusViewModel::class.java]
+
+        // Setup network status monitoring
+        setupNetworkStatusObserver()
 
         // Get songs
         viewLifecycleOwner.lifecycleScope.launch {
@@ -213,6 +223,38 @@ class HomeFragment : Fragment() {
             Log.d("HomeFragment", "Cover doesn't exist at $coverPath, defaulting to sample cover")
 
             coverView.setImageResource(R.drawable.sample_cover)
+        }
+    }
+
+    private fun setupNetworkStatusObserver() {
+        networkStatusViewModel.isNetworkAvailable?.observe(viewLifecycleOwner) { isAvailable ->
+            if (isAvailable) {
+                // Internet available - hide offline message if it exists
+                binding.root.findViewById<View>(R.id.home_offline_message)?.visibility = View.GONE
+
+            } else {
+                // No internet - show offline message
+                if (binding.root.findViewById<View>(R.id.home_offline_message) == null) {
+                    val offlineMessage = TextView(requireContext()).apply {
+                        id = R.id.home_offline_message
+                        text = "Some features require internet connection"
+                        setTextColor(Color.WHITE)
+                        textSize = 14f
+                        gravity = android.view.Gravity.CENTER
+                        layoutParams = LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT
+                        )
+                        setPadding(32, 16, 32, 16)
+                        setBackgroundColor("#44000000".toColorInt())
+                    }
+                    // Add it below the toolbar
+                    val index = binding.root.indexOfChild(binding.homeToolbar.root) + 1
+                    binding.root.addView(offlineMessage, index)
+                } else {
+                    binding.root.findViewById<View>(R.id.home_offline_message).visibility = View.VISIBLE
+                }
+            }
         }
     }
 }

@@ -1,11 +1,13 @@
 package com.example.purritify
 
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -16,6 +18,7 @@ import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDatabase
 import com.example.purritify.data.room.SongEvent
 import com.example.purritify.databinding.FragmentMyLibraryBinding
+import com.example.purritify.network.NetworkStatusViewModel
 import com.example.purritify.ui.library.dialog.AddSongDialogFragment
 import com.example.purritify.ui.library.SongAdapter
 import com.example.purritify.ui.library.SongViewModel
@@ -28,6 +31,7 @@ import com.example.purritify.ui.player.PlayerViewModel
 import com.google.android.material.chip.ChipGroup
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import androidx.core.graphics.toColorInt
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -47,6 +51,7 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
     private lateinit var songAdapter: SongAdapter
 
     private lateinit var playerViewModel: PlayerViewModel
+    private lateinit var networkStatusViewModel: NetworkStatusViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +77,9 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
         )[SongViewModel::class.java]
 
         playerViewModel = ViewModelProvider(requireActivity())[PlayerViewModel::class.java]
+
+        // Initialize network status viewmodel
+        networkStatusViewModel = ViewModelProvider(requireActivity())[NetworkStatusViewModel::class.java]
     }
 
     override fun onCreateView(
@@ -84,6 +92,9 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Setup network status monitoring
+        setupNetworkStatusObserver()
 
         setupRecyclerView()
         setupChipGroup()
@@ -154,6 +165,42 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
         EditSongDialogFragment({
                 event -> songViewModel.onEvent(event)
         }, song).show(parentFragmentManager, "DeleteSongDialog")
+    }
+
+    private fun setupNetworkStatusObserver() {
+        networkStatusViewModel.isNetworkAvailable?.observe(viewLifecycleOwner) { isAvailable ->
+            if (isAvailable) {
+                // Internet available
+                binding.root.findViewById<View>(R.id.library_offline_message)?.visibility = View.GONE
+
+                // Enable online-only features like song uploading to server if needed
+                binding.floatingActionButton.isEnabled = true
+            } else {
+                // No internet
+                if (binding.root.findViewById<View>(R.id.library_offline_message) == null) {
+                    val offlineMessage = TextView(requireContext()).apply {
+                        id = R.id.library_offline_message
+                        text = "Limited functionality: You can play local songs but can't upload new songs"
+                        setTextColor(Color.WHITE)
+                        textSize = 14f
+                        gravity = android.view.Gravity.CENTER
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT
+                        )
+                        setPadding(32, 16, 32, 16)
+                        setBackgroundColor("#44000000".toColorInt())
+                    }
+                    // Add it at the top of the layout
+                    binding.root.addView(offlineMessage, 0)
+                } else {
+                    binding.root.findViewById<View>(R.id.library_offline_message).visibility = View.VISIBLE
+                }
+
+                // If adding songs requires internet, disable the button
+                // binding.floatingActionButton.isEnabled = false
+            }
+        }
     }
 
     companion object {

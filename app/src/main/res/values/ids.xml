@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="profile_offline_message" type="id" />
+    <item name="home_offline_message" type="id" />
+    <item name="library_offline_message" type="id" />
+</resources>

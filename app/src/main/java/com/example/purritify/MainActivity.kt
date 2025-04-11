@@ -18,19 +18,26 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import com.example.purritify.databinding.ActivityMainBinding
 import androidx.navigation.findNavController
 import androidx.navigation.ui.NavigationUI
+import com.example.purritify.network.NetworkConnectivityManager
+import com.example.purritify.network.NetworkStatusViewModel
 import com.example.purritify.service.TokenRefreshService
 import com.example.purritify.ui.login.LoginActivity
 import com.example.purritify.ui.login.TokenManager
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var networkConnectivityManager: NetworkConnectivityManager
+    private lateinit var networkStatusViewModel: NetworkStatusViewModel
+    private var noInternetSnackbar: Snackbar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -45,6 +52,9 @@ class MainActivity : AppCompatActivity() {
         ensureTokenRefreshServiceRunning()
         registerTokenRefreshReceiver()
 
+        // Setup network monitoring
+        setupNetworkMonitoring()
+
         val navController = this.findNavController(R.id.fragment_container_view)
         NavigationUI.setupWithNavController(binding.bottomNavigationView, navController)
     }
@@ -55,6 +65,35 @@ class MainActivity : AppCompatActivity() {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(tokenRefreshFailedReceiver)
         } catch (e: IllegalArgumentException) {
             Log.w("MainActivity", "Token refresh receiver was not registered or already unregistered")
+        }
+
+        // Unregister network callback
+        networkConnectivityManager.unregisterNetworkCallback()
+    }
+
+    private fun setupNetworkMonitoring() {
+        networkConnectivityManager = NetworkConnectivityManager(applicationContext)
+        networkStatusViewModel = ViewModelProvider(this)[NetworkStatusViewModel::class.java]
+        networkStatusViewModel.initialize(networkConnectivityManager)
+
+        binding.root.post {
+            networkStatusViewModel.isNetworkAvailable?.observe(this) { isAvailable ->
+                if (isAvailable) {
+                    // Internet is available
+                    noInternetSnackbar?.dismiss()
+                    noInternetSnackbar = null
+                } else {
+                    // No internet
+                    if (noInternetSnackbar == null) {
+                        noInternetSnackbar = Snackbar.make(
+                            binding.root,
+                            "No internet connection",
+                            Snackbar.LENGTH_INDEFINITE
+                        )
+                        noInternetSnackbar?.show()
+                    }
+                }
+            }
         }
     }
 
