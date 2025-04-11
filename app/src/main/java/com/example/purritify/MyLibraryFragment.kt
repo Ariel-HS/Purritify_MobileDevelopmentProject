@@ -51,7 +51,6 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
     private lateinit var songAdapter: SongAdapter
 
     private lateinit var playerViewModel: PlayerViewModel
-    private lateinit var networkStatusViewModel: NetworkStatusViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,9 +76,7 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
         )[SongViewModel::class.java]
 
         playerViewModel = ViewModelProvider(requireActivity())[PlayerViewModel::class.java]
-
-        // Initialize network status viewmodel
-        networkStatusViewModel = ViewModelProvider(requireActivity())[NetworkStatusViewModel::class.java]
+        
     }
 
     override fun onCreateView(
@@ -92,9 +89,6 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // Setup network status monitoring
-        setupNetworkStatusObserver()
 
         setupRecyclerView()
         setupChipGroup()
@@ -165,42 +159,6 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
         EditSongDialogFragment({
                 event -> songViewModel.onEvent(event)
         }, song).show(parentFragmentManager, "DeleteSongDialog")
-    }
-
-    private fun setupNetworkStatusObserver() {
-        networkStatusViewModel.isNetworkAvailable?.observe(viewLifecycleOwner) { isAvailable ->
-            if (isAvailable) {
-                // Internet available
-                binding.root.findViewById<View>(R.id.library_offline_message)?.visibility = View.GONE
-
-                // Enable online-only features like song uploading to server if needed
-                binding.floatingActionButton.isEnabled = true
-            } else {
-                // No internet
-                if (binding.root.findViewById<View>(R.id.library_offline_message) == null) {
-                    val offlineMessage = TextView(requireContext()).apply {
-                        id = R.id.library_offline_message
-                        text = "Limited functionality: You can play local songs but can't upload new songs"
-                        setTextColor(Color.WHITE)
-                        textSize = 14f
-                        gravity = android.view.Gravity.CENTER
-                        layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT
-                        )
-                        setPadding(32, 16, 32, 16)
-                        setBackgroundColor("#44000000".toColorInt())
-                    }
-                    // Add it at the top of the layout
-                    binding.root.addView(offlineMessage, 0)
-                } else {
-                    binding.root.findViewById<View>(R.id.library_offline_message).visibility = View.VISIBLE
-                }
-
-                // If adding songs requires internet, disable the button
-                // binding.floatingActionButton.isEnabled = false
-            }
-        }
     }
 
     companion object {
