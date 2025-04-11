@@ -99,24 +99,8 @@ class SongViewModel(
     fun getListenedSongCount(): Flow<Int> { return dao.getAllSortedByUploadDateAndEmail(userEmail).map { songs -> songs.count { it.lastPlayed != null }}}
 
     // Player
-    fun getSongById(id: Int): Flow<Song?> { return dao.getSongById(id) }
-
-    suspend fun getNextSong(currentSongId: Int): Song? {
-        val sortedSongs = dao.getAllSortedByUploadDateOnce(userEmail)
-
-        val currentIndex = sortedSongs.indexOfFirst { it.id == currentSongId }
-        Log.d("SongViewModel", "Current song index: $currentIndex, switching to ${if (currentIndex != -1 && currentIndex + 1 < sortedSongs.size) { sortedSongs[currentIndex + 1] } else null}")
-
-        return if (currentIndex != -1 && currentIndex + 1 < sortedSongs.size) { sortedSongs[currentIndex + 1] } else null
-    }
-
-    suspend fun getPreviousSong(currentSongId: Int): Song? {
-        val sortedSongs = dao.getAllSortedByUploadDateOnce(userEmail)
-
-        val currentIndex = sortedSongs.indexOfFirst { it.id == currentSongId }
-        Log.d("SongViewModel", "Current song index: $currentIndex, switching to ${if (currentIndex > 0) { sortedSongs[currentIndex - 1] } else null}")
-
-        return if (currentIndex > 0) { sortedSongs[currentIndex - 1] } else null
+    fun getAllSongs(): Flow<List<Song>> {
+        return dao.getAllSortedByUploadDateAndEmail(userEmail)
     }
 
     fun onEvent(event: SongEvent) {

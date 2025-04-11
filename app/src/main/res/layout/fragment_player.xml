@@ -60,12 +60,13 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/songDataContainer"
         android:layout_width="0dp"
-        android:layout_height="51dp"
+        android:layout_height="53dp"
         app:layout_constraintStart_toStartOf="@id/songCover"
         app:layout_constraintEnd_toEndOf="@id/songCover"
         app:layout_constraintTop_toBottomOf="@id/songCover"
         android:layout_marginTop="24dp"
-        >
+        android:clipToPadding="false"
+        android:clipChildren="false" >
 
         <!-- Title -->
         <TextView
@@ -99,12 +100,12 @@
             app:layout_constraintTop_toBottomOf="@id/songTitle"
             />
 
-        <!-- More Button -->
+        <!-- Like Button -->
         <ImageButton
             android:id="@+id/heartButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@android:color/transparent"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:background="@drawable/heart"
             android:contentDescription="@string/close_player_screen"
             android:src="@drawable/heart"
             android:layout_margin="4dp"
