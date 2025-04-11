@@ -14,6 +14,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
@@ -187,7 +188,7 @@ class HomeFragment : Fragment() {
             // Set data
             title.text = song.title
             artist.text = song.artist
-            loadCover(song.pathFile, cover)
+            loadCover(song.pathArtwork, cover)
 
             // Redirect to player fragment
             songView.setOnClickListener {
@@ -204,14 +205,13 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadCover(coverPath: String, coverView: ImageView) {
-        val file = File(coverPath)
-
-        if (file.exists()) {
-            val uri = Uri.fromFile(file)
+        try {
+            Log.d("HomeFragment", coverPath)
+//            coverView.setImageURI(coverPath.toUri())
             Glide.with(requireContext())
-                .load(uri)
+                .load(coverPath.toUri())
                 .into(coverView)
-        } else {
+        } catch (e: Exception) {
             Log.d("HomeFragment", "Cover doesn't exist at $coverPath, defaulting to sample cover")
 
             coverView.setImageResource(R.drawable.sample_cover)
