@@ -167,10 +167,14 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadRecentlyPlayed() {
+        val density = resources.displayMetrics.density
+
         val params = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+        ).apply {
+            bottomMargin = (12 * density).toInt()
+        }
 
         loadSongsToContainer(recentlyPlayedSongs, binding.recentlyPlayedContainer, R.layout.home_song_card, params)
     }
