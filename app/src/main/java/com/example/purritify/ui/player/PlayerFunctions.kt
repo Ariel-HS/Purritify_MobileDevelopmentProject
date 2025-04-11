@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import androidx.core.graphics.ColorUtils
+import androidx.core.net.toUri
 import androidx.palette.graphics.Palette
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
@@ -25,16 +26,13 @@ import java.util.Date
 fun handleCover(context: Context, coverPath: String, coverView: ImageView, backgroundView: View, tag: String) {
     // Load song cover then adjusts the background color to the dominant color of the cover
 
-    val file = File(coverPath)
-
-    if (file.exists()) {
-        val uri = Uri.fromFile(file)
+    try {
         Glide.with(context)
-            .load(uri)
+            .load(coverPath.toUri())
             .into(coverView)
 
-        adjustBGColor(context, backgroundView, uri)
-    } else {
+        adjustBGColor(context, backgroundView, coverPath.toUri())
+    } catch (e: Exception) {
         Log.d(tag, "Cover doesn't exist at $coverPath, defaulting to sample cover")
 
         coverView.setImageResource(R.drawable.sample_cover)

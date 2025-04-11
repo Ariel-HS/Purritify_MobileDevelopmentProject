@@ -206,8 +206,6 @@ class HomeFragment : Fragment() {
 
     private fun loadCover(coverPath: String, coverView: ImageView) {
         try {
-            Log.d("HomeFragment", coverPath)
-//            coverView.setImageURI(coverPath.toUri())
             Glide.with(requireContext())
                 .load(coverPath.toUri())
                 .into(coverView)
