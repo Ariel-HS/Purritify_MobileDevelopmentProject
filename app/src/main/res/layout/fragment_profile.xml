@@ -1,25 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ProfileFragment"
     android:background="#000000"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp" >
 
     <!-- Profile Card -->
     <FrameLayout
         android:id="@+id/profileCardContainer"
         android:layout_width="122dp"
         android:layout_height="175dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="70dp">
+        android:layout_marginTop="70dp"
 
-        <!--    <include layout="@layout/profile_card"/>-->
-
-    </FrameLayout>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Edit Profile Button -->
     <Button
@@ -34,7 +33,11 @@
         android:layout_marginTop="12dp"
         android:paddingHorizontal="24dp"
         android:layout_gravity="center_horizontal"
-        android:minHeight="38dp" />
+        android:minHeight="38dp"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/profileCardContainer" />
 
     <!-- Statistics -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -82,10 +85,10 @@
         android:id="@+id/miniPlayer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
+        android:visibility="visible"
 
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
