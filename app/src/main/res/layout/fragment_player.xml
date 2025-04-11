@@ -11,38 +11,40 @@
     <!-- Buttons -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/buttonContainer"
-        android:background="@android:color/transparent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
         app:layout_constraintBaseline_toTopOf="parent"
-        >
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <!-- Close Button -->
         <ImageButton
             android:id="@+id/closeButton"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:background="@drawable/caret"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="4dp"
+            android:backgroundTint="@android:color/transparent"
             android:contentDescription="@string/close_player_screen"
             android:src="@drawable/caret"
-            android:layout_margin="4dp"
             app:layout_constraintBaseline_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
         <!-- More Button -->
         <ImageButton
             android:id="@+id/moreButton"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:background="@drawable/more"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="4dp"
+            android:background="@android:color/transparent"
             android:contentDescription="@string/close_player_screen"
             android:src="@drawable/more"
-            android:layout_margin="4dp"
             app:layout_constraintBaseline_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-    
+
     <!-- Song Cover -->
     <ImageView
         android:id="@+id/songCover"
@@ -100,9 +102,9 @@
         <!-- More Button -->
         <ImageButton
             android:id="@+id/heartButton"
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:background="@drawable/heart"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@android:color/transparent"
             android:contentDescription="@string/close_player_screen"
             android:src="@drawable/heart"
             android:layout_margin="4dp"
@@ -118,60 +120,60 @@
         android:id="@+id/durationBar"
         android:layout_width="0dp"
         android:layout_height="45dp"
-        app:layout_constraintStart_toStartOf="@id/songCover"
         app:layout_constraintEnd_toEndOf="@id/songCover"
-        app:layout_constraintTop_toBottomOf="@id/songDataContainer"
-        android:layout_marginTop="12dp">
+        app:layout_constraintStart_toStartOf="@id/songCover"
+        app:layout_constraintTop_toBottomOf="@+id/songDataContainer"
+        android:layout_marginTop="@dimen/view_margin"
+        >
 
         <SeekBar
             android:id="@+id/songSeekBar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:progressTint="@color/white"
-            android:thumbTint="@color/white"
-            android:progressBackgroundTint="@color/white"
-            android:backgroundTint="@color/white"
-            android:splitTrack="false"
-            android:padding="0dp"
-
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-
             android:layout_marginStart="-10dp"
-            android:layout_marginEnd="-10dp"/>
+            android:layout_marginEnd="-10dp"
+            android:backgroundTint="@color/white"
+            android:padding="0dp"
+            android:progressBackgroundTint="@color/white"
+            android:progressTint="@color/white"
+
+            android:splitTrack="false"
+            android:thumbTint="@color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/songDurationAt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="10sp"
-            android:textColor="#B2B2B2"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="2dp"
             android:text="@string/_0_00"
-            tools:ignore="SmallSp"
+            android:textColor="#B2B2B2"
 
-            app:layout_constraintTop_toBottomOf="@id/songSeekBar"
+            android:textSize="10sp"
             app:layout_constraintStart_toStartOf="@id/songSeekBar"
 
-            android:layout_marginTop="2dp"
-            android:layout_marginStart="12dp"
-            />
+            app:layout_constraintTop_toBottomOf="@id/songSeekBar"
+            tools:ignore="SmallSp" />
 
         <TextView
             android:id="@+id/songDurationTo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="10sp"
-            android:textColor="#B2B2B2"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="12dp"
             android:text="@string/_0_00"
-            tools:ignore="SmallSp"
+            android:textColor="#B2B2B2"
 
-            app:layout_constraintTop_toBottomOf="@id/songSeekBar"
+            android:textSize="10sp"
             app:layout_constraintEnd_toEndOf="@id/songSeekBar"
 
-            android:layout_marginTop="2dp"
-            android:layout_marginEnd="12dp" />
+            app:layout_constraintTop_toBottomOf="@id/songSeekBar"
+            tools:ignore="SmallSp" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -188,9 +190,9 @@
         <!-- Prev -->
         <ImageButton
             android:id="@+id/prevButton"
-            android:layout_width="18dp"
-            android:layout_height="20.35dp"
-            android:background="@drawable/prev"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@android:color/transparent"
             android:contentDescription="@string/previous_song"
             android:src="@drawable/prev"
             android:layout_margin="4dp"
@@ -238,9 +240,9 @@
         <!-- Next -->
         <ImageButton
             android:id="@+id/nextButton"
-            android:layout_width="18dp"
-            android:layout_height="20.35dp"
-            android:background="@drawable/next"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@android:color/transparent"
             android:contentDescription="@string/next_song"
             android:src="@drawable/next"
             android:layout_margin="4dp"
