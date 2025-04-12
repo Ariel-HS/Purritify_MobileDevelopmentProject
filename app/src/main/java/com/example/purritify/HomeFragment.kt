@@ -107,7 +107,7 @@ class HomeFragment : Fragment() {
         // Miniplayer logic
         val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
         miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, songViewModel) {
-            val action = HomeFragmentDirections.actionHomeToPlayer(songId = it.id)
+            val action = HomeFragmentDirections.actionHomeToPlayer(songId = it.id, true)
             findNavController().navigate(action)
         }
 
@@ -207,7 +207,7 @@ class HomeFragment : Fragment() {
             Glide.with(requireContext())
                 .load(coverPath.toUri())
                 .into(coverView)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Log.d("HomeFragment", "Cover doesn't exist at $coverPath, defaulting to sample cover")
 
             coverView.setImageResource(R.drawable.sample_cover)

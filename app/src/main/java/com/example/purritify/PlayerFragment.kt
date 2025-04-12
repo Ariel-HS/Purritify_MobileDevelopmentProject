@@ -37,6 +37,7 @@ enum class Direction {
 class PlayerFragment : Fragment() {
     private val args: PlayerFragmentArgs by navArgs()
     private var songId: Int = -1
+    private var fromMiniplayer: Boolean = false
     private var currentSong: Song? = null
     private var songList: List<Song> = emptyList()
 
@@ -53,6 +54,7 @@ class PlayerFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
         // Get arguments
+        fromMiniplayer = args.fromMiniplayer
         songId = args.songId
 
         // Fetch email
@@ -114,9 +116,10 @@ class PlayerFragment : Fragment() {
                 handleData()
 
                 // Handle playback state
+                Log.d("PlayerFragment", "From miniplayer? $fromMiniplayer")
                 val currentlyPlaying = playerViewModel.currentSong.value
                 if (!playerViewModel.isPlaying() && playerViewModel.isPaused.value != true) playSong()                                          // Start player if not currently playing & not currently paused
-                else if (playerViewModel.isPaused.value == true && currentlyPlaying?.id == currentSong?.id) {                                   // Resume playing if the same song is clicked and it's currently paused
+                else if (playerViewModel.isPaused.value == true && currentlyPlaying?.id == currentSong?.id && !fromMiniplayer) {                // Resume playing if the same song is clicked and it's currently paused
                     Handler(Looper.getMainLooper()).postDelayed({
                         playerViewModel.togglePause()
                     }, 200)

@@ -80,7 +80,7 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
         // Miniplayer logic
         val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
         miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, songViewModel) {
-            val action = MyLibraryFragmentDirections.actionLibraryToPlayer(songId = it.id)
+            val action = MyLibraryFragmentDirections.actionLibraryToPlayer(songId = it.id, true)
             findNavController().navigate(action)
         }
     }

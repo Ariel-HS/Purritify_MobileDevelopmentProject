@@ -35,11 +35,15 @@
     <fragment
         android:id="@+id/player"
         android:name="com.example.purritify.PlayerFragment"
-        android:label="fragment_profile"
+        android:label="player"
         tools:layout="@layout/fragment_player">
             <argument
                 android:name="songId"
                 app:argType="integer"
                 android:defaultValue="-1"/>
+            <argument
+                android:name="fromMiniplayer"
+                app:argType="boolean"
+                android:defaultValue="false"/>
     </fragment>
 </navigation>
