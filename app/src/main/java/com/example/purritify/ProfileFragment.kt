@@ -28,7 +28,6 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.example.purritify.data.room.SongDatabase
 import com.example.purritify.databinding.FragmentProfileBinding
-import com.example.purritify.network.NetworkStatusViewModel
 import com.example.purritify.retrofit.Api
 import com.example.purritify.ui.library.SongViewModel
 import com.example.purritify.ui.library.SongViewModelFactory
@@ -41,6 +40,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Locale
+import androidx.core.graphics.toColorInt
 
 /**
  * A simple [Fragment] subclass.
@@ -54,7 +54,6 @@ class ProfileFragment : Fragment() {
     private lateinit var profileViewModel: ProfileViewModel
     private lateinit var songViewModel: SongViewModel
     private lateinit var playerViewModel: PlayerViewModel
-    private lateinit var networkStatusViewModel: NetworkStatusViewModel
 
     private var songs: Int = 0
     private var liked: Int = 0
@@ -94,8 +93,6 @@ class ProfileFragment : Fragment() {
 
         playerViewModel = ViewModelProvider(requireActivity())[PlayerViewModel::class.java]
 
-        // Initialize network status viewmodel
-        networkStatusViewModel = ViewModelProvider(requireActivity())[NetworkStatusViewModel::class.java]
     }
 
     override fun onCreateView(
@@ -111,6 +108,9 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Setup network monitoring
+        setupNetworkMonitoring()
+
         // Profile
         profileViewModel.profile.observe(viewLifecycleOwner, Observer { profile ->
             profile?.let {
@@ -121,9 +121,6 @@ class ProfileFragment : Fragment() {
                 adjustBGColor(profileUrl)
             }
         })
-
-        // Setup network status monitoring
-        setupNetworkStatusObserver()
 
         // Statistics
         lifecycleScope.launch {
@@ -220,50 +217,47 @@ class ProfileFragment : Fragment() {
             })
     }
 
-    private fun setupNetworkStatusObserver() {
-        networkStatusViewModel.isNetworkAvailable?.observe(viewLifecycleOwner) { isAvailable ->
-            if (isAvailable) {
-                // Internet available, show profile data and fetch profile
-                binding.profileCardContainer.visibility = View.VISIBLE
-                binding.root.findViewById<View>(R.id.profile_offline_message)?.visibility = View.GONE
+    private fun setupNetworkMonitoring() {
+        // Get reference to the NetworkStatusViewModel
+        val networkStatusViewModel = (requireActivity() as MainActivity).getNetworkStatusViewModel()
 
-                // Fetch profile only when internet is available
+        // Create offline message if it doesn't exist
+        if (binding.root.findViewById<TextView>(R.id.profile_offline_message) == null) {
+            val offlineMessage = TextView(requireContext()).apply {
+                id = R.id.profile_offline_message
+                text = "No internet connection. Profile data may not be up to date."
+                setBackgroundColor("#AA444444".toColorInt())
+                setTextColor(Color.WHITE)
+                gravity = Gravity.CENTER
+                setPadding(
+                    resources.getDimensionPixelSize(R.dimen.view_padding),
+                    resources.getDimensionPixelSize(R.dimen.view_padding),
+                    resources.getDimensionPixelSize(R.dimen.view_padding),
+                    resources.getDimensionPixelSize(R.dimen.view_padding)
+                )
+                visibility = View.GONE
+            }
+
+            // Add to the top of the layout
+            val params = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            params.gravity = Gravity.TOP
+            binding.root.addView(offlineMessage, params)
+        }
+
+        // Observe network status
+        networkStatusViewModel.isNetworkAvailable?.observe(viewLifecycleOwner) { isAvailable ->
+            val offlineMessage = binding.root.findViewById<TextView>(R.id.profile_offline_message)
+            offlineMessage?.visibility = if (isAvailable == true) View.GONE else View.VISIBLE
+
+            // If network becomes available, refresh profile data
+            if (isAvailable == true) {
                 val token = TokenManager.getInstance(requireContext()).getToken()
                 token?.let {
+                    Log.d("ProfileFragment", "Network reconnected, refreshing profile data")
                     profileViewModel.fetchProfile("Bearer $it")
-                } ?: Log.d("ProfileFragment", "Token not found.")
-
-                // Observe profile data
-                profileViewModel.profile.observe(viewLifecycleOwner) { profile ->
-                    profile?.let {
-                        // Get profile picture
-                        val profileUrl = "${Api.BASE_URL}/uploads/profile-picture/${profile.profilePhoto}"
-
-                        loadProfileCard(profile.username, Locale("", profile.location).displayCountry, profileUrl)
-                        adjustBGColor(profileUrl)
-                    }
-                }
-            } else {
-                // No internet, show offline message
-                binding.profileCardContainer.visibility = View.GONE
-
-                // Check if offline message view exists, if not create it
-                if (binding.root.findViewById<View>(R.id.profile_offline_message) == null) {
-                    val offlineMessage = TextView(requireContext()).apply {
-                        id = R.id.profile_offline_message
-                        text = "Profile information requires internet connection"
-                        setTextColor(Color.WHITE)
-                        textSize = 16f
-                        gravity = Gravity.CENTER
-                        layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT
-                        )
-                        setPadding(32, 100, 32, 32)
-                    }
-                    binding.root.addView(offlineMessage)
-                } else {
-                    binding.root.findViewById<View>(R.id.profile_offline_message).visibility = View.VISIBLE
                 }
             }
         }

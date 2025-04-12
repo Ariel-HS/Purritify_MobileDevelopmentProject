@@ -40,6 +40,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var networkStatusViewModel: NetworkStatusViewModel
     private var noInternetSnackbar: Snackbar? = null
 
+    fun getNetworkStatusViewModel(): NetworkStatusViewModel {
+        return networkStatusViewModel
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
 
