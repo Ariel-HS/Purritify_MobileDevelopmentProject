@@ -131,10 +131,10 @@ class TokenRefreshService : Service() {
         tokenManager.clearToken()
         tokenManager.clearRefreshToken()
         tokenManager.clearUserEmail()
-        Log.d("TAG", "User logged out and tokens cleared")
-        Log.d("TAG", "Token: ${tokenManager.getToken()}")
-        Log.d("TAG", "Refresh Token: ${tokenManager.getRefreshToken()}")
-        Log.d("TAG", "User Email: ${tokenManager.getUserEmail()}")
+        Log.d(TAG, "User logged out and tokens cleared")
+        Log.d(TAG, "Token: ${tokenManager.getToken()}")
+        Log.d(TAG, "Refresh Token: ${tokenManager.getRefreshToken()}")
+        Log.d(TAG, "User Email: ${tokenManager.getUserEmail()}")
 
         // Send broadcast to notify activities that token refresh failed and logout is needed
         val intent = Intent("com.example.purritify.TOKEN_REFRESH_FAILED")

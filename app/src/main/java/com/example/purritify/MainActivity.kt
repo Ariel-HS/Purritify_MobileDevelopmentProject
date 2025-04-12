@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
@@ -71,32 +72,6 @@ class MainActivity : AppCompatActivity() {
         networkConnectivityManager.unregisterNetworkCallback()
     }
 
-    private fun setupNetworkMonitoring() {
-        networkConnectivityManager = NetworkConnectivityManager(applicationContext)
-        networkStatusViewModel = ViewModelProvider(this)[NetworkStatusViewModel::class.java]
-        networkStatusViewModel.initialize(networkConnectivityManager)
-
-        binding.root.post {
-            networkStatusViewModel.isNetworkAvailable?.observe(this) { isAvailable ->
-                if (isAvailable) {
-                    // Internet is available
-                    noInternetSnackbar?.dismiss()
-                    noInternetSnackbar = null
-                } else {
-                    // No internet
-                    if (noInternetSnackbar == null) {
-                        noInternetSnackbar = Snackbar.make(
-                            binding.root,
-                            "No internet connection",
-                            Snackbar.LENGTH_INDEFINITE
-                        )
-                        noInternetSnackbar?.show()
-                    }
-                }
-            }
-        }
-    }
-
     private fun checkTokenValidity() {
         val tokenManager = TokenManager.getInstance(applicationContext)
         if (tokenManager.getToken() == null) {
@@ -150,6 +125,44 @@ class MainActivity : AppCompatActivity() {
             Log.d("MainActivity", "Token refresh service stopped")
         } catch (e: Exception) {
             Log.e("MainActivity", "Failed to stop token refresh service", e)
+        }
+    }
+
+    private fun setupNetworkMonitoring() {
+        networkConnectivityManager = NetworkConnectivityManager(applicationContext)
+        networkStatusViewModel = ViewModelProvider(this)[NetworkStatusViewModel::class.java]
+        networkStatusViewModel.initialize(networkConnectivityManager)
+
+        binding.root.post {
+            networkStatusViewModel.isNetworkAvailable?.observe(this) { isAvailable ->
+                if (isAvailable) {
+                    // Internet is available
+                    noInternetSnackbar?.dismiss()
+                    noInternetSnackbar = null
+                } else {
+                    // No internet
+                    if (noInternetSnackbar == null) {
+                        noInternetSnackbar = Snackbar.make(
+                            binding.root,
+                            "No internet connection",
+                            Snackbar.LENGTH_INDEFINITE
+                        )
+
+                        val snackbarView = noInternetSnackbar?.view
+
+                        // Set close button
+                        noInternetSnackbar?.setAction("\u00D7") {
+                            noInternetSnackbar?.dismiss()
+                            noInternetSnackbar = null
+                        }
+
+                        val textView = snackbarView?.findViewById<TextView>(com.google.android.material.R.id.snackbar_action)
+                        textView?.textSize = 22f
+
+                        noInternetSnackbar?.show()
+                    }
+                }
+            }
         }
     }
 }
