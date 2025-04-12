@@ -12,7 +12,6 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.purritify.databinding.ActivityMainBinding
 import androidx.navigation.findNavController
-import androidx.navigation.ui.NavigationUI
 import com.example.purritify.service.TokenRefreshService
 import com.example.purritify.ui.login.LoginActivity
 import com.example.purritify.ui.login.TokenManager
@@ -35,14 +34,34 @@ class MainActivity : AppCompatActivity() {
         registerTokenRefreshReceiver()
 
         val navController = this.findNavController(R.id.fragment_container_view)
-        NavigationUI.setupWithNavController(binding.bottomNavigationView, navController)
+
+        binding.bottomNavigationView.setOnItemSelectedListener { item ->
+            // Pop player fragment before navigating
+            navController.popBackStack(R.id.player, true)
+
+            when (item.itemId) {
+                R.id.home_page -> {
+                    navController.navigate(R.id.home_page)
+                    true
+                }
+                R.id.my_library -> {
+                    navController.navigate(R.id.my_library)
+                    true
+                }
+                R.id.profile -> {
+                    navController.navigate(R.id.profile)
+                    true
+                }
+                else -> false
+            }
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         try {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(tokenRefreshFailedReceiver)
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             Log.w("MainActivity", "Token refresh receiver was not registered or already unregistered")
         }
     }
