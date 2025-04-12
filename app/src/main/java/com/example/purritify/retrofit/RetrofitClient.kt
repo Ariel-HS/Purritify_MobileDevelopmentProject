@@ -13,14 +13,14 @@ class RetrofitClient {
 
         val interceptor = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
         val clientBuilder: OkHttpClient.Builder =
-            client.newBuilder().addInterceptor(interceptor as HttpLoggingInterceptor)
+            client.newBuilder().addInterceptor(interceptor)
 
         val retrofit: Retrofit = Retrofit.Builder()
             .baseUrl(Api.BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(clientBuilder.build())
             .build()
-        myApi = retrofit.create<Api>(Api::class.java)
+        myApi = retrofit.create(Api::class.java)
     }
 
     companion object {
