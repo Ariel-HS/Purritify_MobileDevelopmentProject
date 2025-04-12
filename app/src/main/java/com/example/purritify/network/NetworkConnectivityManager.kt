@@ -12,9 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.isActive
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -35,11 +33,11 @@ class NetworkConnectivityManager(context: Context) {
 
         override fun onLost(network: Network) {
             Log.d("NetworkConnectivityManager", "Network callback: onLost")
-            _isNetworkAvailable.postValue(false)
+            verifyInternetAccess()
         }
 
         override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
-            Log.d("NetworkConnectivityManager", "Network capabilities changed")
+            Log.d("NetworkConnectivityManager", "Network callback: onCapabilitiesChanged")
             if (capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
                 verifyInternetAccess()
             }
@@ -49,16 +47,34 @@ class NetworkConnectivityManager(context: Context) {
     init {
         checkInitialNetworkState()
         registerNetworkCallback()
-        startPeriodicConnectivityCheck()
     }
 
-    private fun startPeriodicConnectivityCheck() {
-        coroutineScope.launch {
-            while (isActive && isNetworkMonitoringActive) {
-                delay(10000) // Check internet connection time interval
-                Log.d("NetworkConnectivityManager", "Running periodic connectivity check")
-                verifyInternetAccess()
-            }
+    private fun checkInitialNetworkState() {
+        val isConnected = isNetworkConnected()
+        Log.d("NetworkConnectivityManager", "Initial network state: $isConnected")
+        if (!isConnected) {
+            _isNetworkAvailable.postValue(false)
+        } else {
+            verifyInternetAccess()
+        }
+    }
+
+    private fun registerNetworkCallback() {
+        val networkRequest = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+        connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
+        Log.d("NetworkConnectivityManager", "Network callback registered")
+    }
+
+    fun unregisterNetworkCallback() {
+        try {
+            connectivityManager.unregisterNetworkCallback(networkCallback)
+            isNetworkMonitoringActive = false
+            coroutineScope.cancel()
+            Log.d("NetworkConnectivityManager", "Network callback unregistered and monitoring stopped")
+        } catch (e: Exception) {
+            Log.e("NetworkConnectivityManager", "Failed to unregister network callback", e)
         }
     }
 
@@ -82,6 +98,19 @@ class NetworkConnectivityManager(context: Context) {
         }
     }
 
+    private fun isNetworkConnected(): Boolean {
+        val activeNetwork = connectivityManager.activeNetwork ?: return false
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
+
+        val hasInternet = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                        networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                        networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
+
+        Log.d("NetworkConnectivityManager", "isNetworkConnected: $hasInternet")
+        return hasInternet
+    }
+
     private fun checkInternetConnection(): Boolean {
         return try {
             val connection = URL("https://www.google.com").openConnection() as HttpURLConnection
@@ -98,41 +127,8 @@ class NetworkConnectivityManager(context: Context) {
         }
     }
 
-    private fun checkInitialNetworkState() {
-        val isConnected = isNetworkConnected()
-        Log.d("NetworkConnectivityManager", "Initial network state: $isConnected")
-        _isNetworkAvailable.postValue(isConnected)
-    }
-
-    private fun isNetworkConnected(): Boolean {
-        val activeNetwork = connectivityManager.activeNetwork ?: return false
-        val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
-
-        val hasInternet = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-                (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                        networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
-                        networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
-
-        Log.d("NetworkConnectivityManager", "Network connected check: $hasInternet")
-        return hasInternet
-    }
-
-    private fun registerNetworkCallback() {
-        val networkRequest = NetworkRequest.Builder()
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            .build()
-        connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
-        Log.d("NetworkConnectivityManager", "Network callback registered")
-    }
-
-    fun unregisterNetworkCallback() {
-        try {
-            connectivityManager.unregisterNetworkCallback(networkCallback)
-            isNetworkMonitoringActive = false
-            coroutineScope.cancel()
-            Log.d("NetworkConnectivityManager", "Network callback unregistered and monitoring stopped")
-        } catch (e: Exception) {
-            Log.e("NetworkConnectivityManager", "Failed to unregister network callback", e)
-        }
+    // Method for triggering connectivity check on demand
+    fun checkConnectivityNow() {
+        verifyInternetAccess()
     }
 }
