@@ -126,8 +126,10 @@ class LoginActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
 
-        // Unregister network callback
-        networkConnectivityManager.unregisterNetworkCallback()
+        // Only unregister if the property has been initialized
+        if (::networkConnectivityManager.isInitialized) {
+            networkConnectivityManager.unregisterNetworkCallback()
+        }
     }
 
     private fun updateUiWithUser(model: LoggedInUserView) {
