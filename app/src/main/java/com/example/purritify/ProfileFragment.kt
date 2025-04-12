@@ -42,11 +42,6 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import androidx.core.graphics.toColorInt
 
-/**
- * A simple [Fragment] subclass.
- * Use the [ProfileFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
 
@@ -92,7 +87,6 @@ class ProfileFragment : Fragment() {
         } ?: Log.d("ProfileFragment", "Token not found.")
 
         playerViewModel = ViewModelProvider(requireActivity())[PlayerViewModel::class.java]
-
     }
 
     override fun onCreateView(
@@ -140,7 +134,7 @@ class ProfileFragment : Fragment() {
         // Miniplayer logic
         val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
         miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, songViewModel) {
-            val action = ProfileFragmentDirections.actionProfileToPlayer(songId = it.id)
+            val action = ProfileFragmentDirections.actionProfileToPlayer(songId = it.id, true)
             findNavController().navigate(action)
         }
     }
@@ -229,12 +223,7 @@ class ProfileFragment : Fragment() {
                 setBackgroundColor("#AA444444".toColorInt())
                 setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER
-                setPadding(
-                    resources.getDimensionPixelSize(R.dimen.view_padding),
-                    resources.getDimensionPixelSize(R.dimen.view_padding),
-                    resources.getDimensionPixelSize(R.dimen.view_padding),
-                    resources.getDimensionPixelSize(R.dimen.view_padding)
-                )
+                setPadding(resources.getDimensionPixelSize(R.dimen.view_padding), resources.getDimensionPixelSize(R.dimen.view_padding), resources.getDimensionPixelSize(R.dimen.view_padding), resources.getDimensionPixelSize(R.dimen.view_padding))
                 visibility = View.GONE
             }
 
@@ -261,16 +250,5 @@ class ProfileFragment : Fragment() {
                 }
             }
         }
-    }
-
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @return A new instance of fragment ProfileFragment.
-         */
-        @JvmStatic
-        fun newInstance() = ProfileFragment()
     }
 }

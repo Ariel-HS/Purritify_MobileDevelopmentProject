@@ -1,14 +1,12 @@
 package com.example.purritify
 
-import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -18,31 +16,17 @@ import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDatabase
 import com.example.purritify.data.room.SongEvent
 import com.example.purritify.databinding.FragmentMyLibraryBinding
-import com.example.purritify.network.NetworkStatusViewModel
-import com.example.purritify.ui.library.dialog.AddSongDialogFragment
 import com.example.purritify.ui.library.SongAdapter
 import com.example.purritify.ui.library.SongViewModel
 import com.example.purritify.ui.library.SongViewModelFactory
+import com.example.purritify.ui.library.dialog.AddSongDialogFragment
 import com.example.purritify.ui.library.dialog.DeleteSongDialogFragment
 import com.example.purritify.ui.library.dialog.EditSongDialogFragment
 import com.example.purritify.ui.login.TokenManager
 import com.example.purritify.ui.player.MiniplayerView
 import com.example.purritify.ui.player.PlayerViewModel
-import com.google.android.material.chip.ChipGroup
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import androidx.core.graphics.toColorInt
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [MyLibraryFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
     private lateinit var binding: FragmentMyLibraryBinding
     private lateinit var songDatabase: SongDatabase
@@ -97,7 +81,7 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
         // Miniplayer logic
         val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
         miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, songViewModel) {
-            val action = MyLibraryFragmentDirections.actionLibraryToPlayer(songId = it.id)
+            val action = MyLibraryFragmentDirections.actionLibraryToPlayer(songId = it.id, true)
             findNavController().navigate(action)
         }
     }
@@ -159,26 +143,6 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
         EditSongDialogFragment({
                 event -> songViewModel.onEvent(event)
         }, song).show(parentFragmentManager, "DeleteSongDialog")
-    }
-
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment MyLibraryFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            MyLibraryFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
     }
 
     override fun onItemClickListener(song: Song) {

@@ -1,18 +1,14 @@
 package com.example.purritify.data
 
 import android.util.Log
-import android.widget.Toast
 import com.example.purritify.data.model.LoggedInUser
 import com.example.purritify.data.model.LoginRequest
 import com.example.purritify.data.model.LoginResponse
 import com.example.purritify.retrofit.RetrofitClient
-import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Response
-import retrofit2.Callback
-import retrofit2.await
 import java.io.IOException
 
 
@@ -53,9 +49,5 @@ class LoginDataSource {
                 return@withContext Result.Error(IOException("Error logging in", e))
             }
         }
-    }
-
-    fun logout() {
-        // TODO: revoke authentication
     }
 }

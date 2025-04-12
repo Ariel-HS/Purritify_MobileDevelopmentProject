@@ -20,7 +20,6 @@ import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongEvent
 import com.example.purritify.ui.library.SongViewModel
 import com.google.android.material.card.MaterialCardView
-import java.io.File
 import java.util.Date
 
 fun handleCover(context: Context, coverPath: String, coverView: ImageView, backgroundView: View, tag: String) {

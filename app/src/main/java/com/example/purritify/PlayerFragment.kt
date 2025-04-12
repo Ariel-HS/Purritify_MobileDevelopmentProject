@@ -1,11 +1,14 @@
 package com.example.purritify
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.purritify.databinding.FragmentPlayerBinding
@@ -22,6 +25,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import androidx.core.net.toUri
 import androidx.navigation.fragment.navArgs
+import com.example.purritify.ui.login.TokenManager
 import com.example.purritify.ui.player.animatePauseIcon
 import com.example.purritify.ui.player.handleCover
 import com.example.purritify.ui.player.handleLike
@@ -33,9 +37,11 @@ enum class Direction {
 class PlayerFragment : Fragment() {
     private val args: PlayerFragmentArgs by navArgs()
     private var songId: Int = -1
+    private var fromMiniplayer: Boolean = false
     private var currentSong: Song? = null
+    private var songList: List<Song> = emptyList()
 
-    private var userEmail: String = ""
+    private var userEmail: String? = null
 
     private lateinit var binding: FragmentPlayerBinding
     private lateinit var playerViewModel: PlayerViewModel
@@ -48,7 +54,17 @@ class PlayerFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
         // Get arguments
+        fromMiniplayer = args.fromMiniplayer
         songId = args.songId
+
+        // Fetch email
+        userEmail = TokenManager.getInstance(requireContext()).getUserEmail()
+
+        if (userEmail.isNullOrEmpty()) {
+            Toast.makeText(requireContext(), "Invalid user email access", Toast.LENGTH_SHORT).show()
+
+            return
+        }
 
         // Init database
         songDatabase = Room.databaseBuilder(
@@ -61,7 +77,7 @@ class PlayerFragment : Fragment() {
         playerViewModel = ViewModelProvider(requireActivity())[PlayerViewModel::class.java]
         songViewModel = ViewModelProvider(
             this,
-            SongViewModelFactory(songDatabase.songDao, userEmail)
+            SongViewModelFactory(songDatabase.songDao, userEmail!!)
         )[SongViewModel::class.java]
     }
 
@@ -69,7 +85,7 @@ class PlayerFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentPlayerBinding.inflate(inflater, container, false)
 
         return binding.root
@@ -83,42 +99,47 @@ class PlayerFragment : Fragment() {
 
         // Get song
         viewLifecycleOwner.lifecycleScope.launch {
-            songViewModel.getSongById(songId).collect { song ->
+            songViewModel.getAllSongs().collect { songs ->
+                songList = songs
+                val song = songs.firstOrNull { it.id == songId }
+
                 if (song == null) {
-                    Log.d("PlayerFragment", "No song found with id $songId")
+                    Log.d("PlayerFragment", "No song found with id $songId, going back to home page" )
 
-                    // Send back to home
                     findNavController().popBackStack()
+                    return@collect
                 }
-
-                Log.d("PlayerFragment", "Song loaded: $song")
 
                 currentSong = song
 
                 // Update UI
                 handleData()
 
-                // Start player if not currently playing & not currently paused
-                if (!playerViewModel.isPlaying() && playerViewModel.isPaused.value != true) playSong()
-
-                // Restart player if songId is different than currentSong
-                if (playerViewModel.isPlaying()) {
-                    val currentlyPlaying = playerViewModel.currentSong.value
-
-                    if (currentlyPlaying == null || currentlyPlaying.id != currentSong?.id) playSong()
+                // Handle playback state
+                Log.d("PlayerFragment", "From miniplayer? $fromMiniplayer")
+                val currentlyPlaying = playerViewModel.currentSong.value
+                if (!playerViewModel.isPlaying() && playerViewModel.isPaused.value != true) playSong()                                          // Start player if not currently playing & not currently paused
+                else if (playerViewModel.isPaused.value == true && currentlyPlaying?.id == currentSong?.id && !fromMiniplayer) {                // Resume playing if the same song is clicked and it's currently paused
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        playerViewModel.togglePause()
+                    }, 200)
                 }
-
-                // Handle pause button
-                binding.pausePlayContainer.setOnClickListener { playerViewModel.togglePause() }
+                else if ((playerViewModel.isPlaying() || playerViewModel.isPaused.value == true) && currentlyPlaying?.id != currentSong?.id) {  // Restart player if songId is different than currentSong
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        playSong()
+                    }, 200)
+                }
 
                 // Handle like button
                 binding.heartButton.setOnClickListener { handleLike(currentSong!!, songViewModel, playerViewModel) }
                 setupLikeButton()
 
+                // Handle pause button
+                binding.pausePlayContainer.setOnClickListener { playerViewModel.togglePause() }
+
                 // Handle prev & next button
                 binding.nextButton.setOnClickListener { switchSongs(Direction.NEXT) }
                 binding.prevButton.setOnClickListener { switchSongs(Direction.PREVIOUS) }
-
             }
         }
 
@@ -140,9 +161,7 @@ class PlayerFragment : Fragment() {
             binding.songDurationAt.text = handleTime(it)
         }
 
-        playerViewModel.isPaused.observe(viewLifecycleOwner) { paused ->
-            animatePauseIcon(paused, binding.playIcon, binding.pauseIcon)
-        }
+        playerViewModel.isPaused.observe(viewLifecycleOwner) { animatePauseIcon(it, binding.playIcon, binding.pauseIcon) }
     }
 
     // ---------------------------------------------------------------- Handle Song Playing ----------------------------------------------------------------------------------
@@ -150,6 +169,20 @@ class PlayerFragment : Fragment() {
     private fun playSong() {
         playerViewModel.setCurrentSong(currentSong!!)
         playerViewModel.playSong(currentSong!!.pathFile.toUri(), songViewModel)
+    }
+
+    private fun getNextSong(direction: Direction): Song? {
+        val currentIndex = songList.indexOfFirst { it.id == currentSong?.id }
+
+        return when (direction) {
+            Direction.NEXT -> {
+                if (currentIndex != -1 && currentIndex + 1 < songList.size) songList[currentIndex + 1] else null
+            }
+
+            Direction.PREVIOUS -> {
+                if (currentIndex > 0) songList[currentIndex - 1] else null
+            }
+        }
     }
 
     private fun handleTime(ms: Int): String {
@@ -162,23 +195,16 @@ class PlayerFragment : Fragment() {
     }
 
     private fun switchSongs(direction: Direction) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            val id = currentSong!!.id
+        val nextSong = getNextSong(direction)
+        if (nextSong != null) {
+            currentSong = nextSong
+            songId = nextSong.id
 
-            val nextSong = when (direction) {
-                Direction.NEXT -> songViewModel.getNextSong(id)
-                Direction.PREVIOUS -> songViewModel.getPreviousSong(id)
-            }
+            // Refresh UI
+            handleData()
 
-            if (nextSong != null) {
-                currentSong = nextSong
-
-                // Refresh UI
-                handleData()
-
-                playerViewModel.setCurrentSong(nextSong)
-                playerViewModel.playSong(nextSong.pathFile.toUri(), songViewModel)
-            }
+            playerViewModel.setCurrentSong(nextSong)
+            playerViewModel.playSong(nextSong.pathFile.toUri(), songViewModel)
         }
     }
 

@@ -1,28 +1,25 @@
 package com.example.purritify
 
 import android.content.Intent
-import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.navigation.fragment.findNavController
-import com.example.purritify.databinding.FragmentHomeBinding
 import android.widget.ImageView
-import android.widget.TextView
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.net.toUri
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.room.Room
 import com.bumptech.glide.Glide
 import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDatabase
-import com.example.purritify.network.NetworkStatusViewModel
+import com.example.purritify.databinding.FragmentHomeBinding
 import com.example.purritify.ui.library.SongViewModel
 import com.example.purritify.ui.library.SongViewModelFactory
 import com.example.purritify.ui.login.LoginActivity
@@ -30,8 +27,6 @@ import com.example.purritify.ui.login.TokenManager
 import com.example.purritify.ui.player.MiniplayerView
 import com.example.purritify.ui.player.PlayerViewModel
 import kotlinx.coroutines.launch
-import java.io.File
-import androidx.core.graphics.toColorInt
 
 class HomeFragment : Fragment() {
 
@@ -112,7 +107,7 @@ class HomeFragment : Fragment() {
         // Miniplayer logic
         val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
         miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, songViewModel) {
-            val action = HomeFragmentDirections.actionHomeToPlayer(songId = it.id)
+            val action = HomeFragmentDirections.actionHomeToPlayer(songId = it.id, true)
             findNavController().navigate(action)
         }
 
@@ -212,7 +207,7 @@ class HomeFragment : Fragment() {
             Glide.with(requireContext())
                 .load(coverPath.toUri())
                 .into(coverView)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Log.d("HomeFragment", "Cover doesn't exist at $coverPath, defaulting to sample cover")
 
             coverView.setImageResource(R.drawable.sample_cover)

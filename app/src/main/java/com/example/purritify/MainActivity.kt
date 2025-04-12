@@ -1,31 +1,19 @@
 package com.example.purritify
 
-import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import androidx.navigation.NavController
-import androidx.navigation.Navigation
-import com.example.purritify.databinding.ActivityMainBinding
 import androidx.navigation.findNavController
-import androidx.navigation.ui.NavigationUI
+import com.example.purritify.databinding.ActivityMainBinding
 import com.example.purritify.network.NetworkConnectivityManager
 import com.example.purritify.network.NetworkStatusViewModel
 import com.example.purritify.service.TokenRefreshService
@@ -63,14 +51,34 @@ class MainActivity : AppCompatActivity() {
         setupNetworkMonitoring()
 
         val navController = this.findNavController(R.id.fragment_container_view)
-        NavigationUI.setupWithNavController(binding.bottomNavigationView, navController)
+
+        binding.bottomNavigationView.setOnItemSelectedListener { item ->
+            // Pop player fragment before navigating
+            navController.popBackStack(R.id.player, true)
+
+            when (item.itemId) {
+                R.id.home_page -> {
+                    navController.navigate(R.id.home_page)
+                    true
+                }
+                R.id.my_library -> {
+                    navController.navigate(R.id.my_library)
+                    true
+                }
+                R.id.profile -> {
+                    navController.navigate(R.id.profile)
+                    true
+                }
+                else -> false
+            }
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         try {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(tokenRefreshFailedReceiver)
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             Log.w("MainActivity", "Token refresh receiver was not registered or already unregistered")
         }
 

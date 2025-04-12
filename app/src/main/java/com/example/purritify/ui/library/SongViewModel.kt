@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDao
 import com.example.purritify.data.room.SongEvent
-import com.example.purritify.ui.login.TokenManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,37 +24,6 @@ class SongViewModel(
     private val userEmail: String
 ): ViewModel() {
 
-    //    Isi Dummy Data
-    //    init {
-    //        viewModelScope.launch {
-    //            val dummySongs = listOf(
-    //                Song(
-    //                    title = "Lofi Dreams",
-    //                    artist = "Chillhop",
-    //                    pathArtwork = "/storage/emulated/0/Music/artwork1.jpg",
-    //                    pathFile = "/storage/emulated/0/Music/song1.mp3",
-    //                    duration = "2:30",
-    //                    liked = true,
-    //                    lastPlayed = null,
-    //                    uploadDate = Date(),
-    //                    userEmail = "13522056@std.stei.itb.ac.id"
-    //                ),
-    //                Song(
-    //                    title = "Rainy Night",
-    //                    artist = "Lofigirl",
-    //                    pathArtwork = "/storage/emulated/0/Music/artwork2.jpg",
-    //                    pathFile = "/storage/emulated/0/Music/song2.mp3",
-    //                    duration = "3:45",
-    //                    liked = false,
-    //                    lastPlayed = null,
-    //                    uploadDate = Date(),
-    //                    userEmail = "13522056@std.stei.itb.ac.id"
-    //                )
-    //            )
-    //            dummySongs.forEach { dao.upsertSong(it) }
-    //        }
-    //    }
-
     private val _isFilterLiked = MutableStateFlow(false)
 
     private val _songs = _isFilterLiked
@@ -72,10 +40,10 @@ class SongViewModel(
                 return@flatMapLatest dao.getAllByUserEmail(userEmail)
             }
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList<Song>())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
-    private val _newSongs = dao.getAllSortedByUploadDateAndEmail(userEmail).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList<Song>())
-    private val _recentlyPlayedSongs = dao.getRecentlyPlayedByEmail(userEmail).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList<Song>())
+    private val _newSongs = dao.getAllSortedByUploadDateAndEmail(userEmail).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+    private val _recentlyPlayedSongs = dao.getRecentlyPlayedByEmail(userEmail).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     private val _state = MutableStateFlow(SongState())
     val state = combine(_state, _isFilterLiked, _songs) { state, isFilterLiked, songs ->
@@ -99,24 +67,8 @@ class SongViewModel(
     fun getListenedSongCount(): Flow<Int> { return dao.getAllSortedByUploadDateAndEmail(userEmail).map { songs -> songs.count { it.lastPlayed != null }}}
 
     // Player
-    fun getSongById(id: Int): Flow<Song?> { return dao.getSongById(id) }
-
-    suspend fun getNextSong(currentSongId: Int): Song? {
-        val sortedSongs = dao.getAllSortedByUploadDateOnce(userEmail)
-
-        val currentIndex = sortedSongs.indexOfFirst { it.id == currentSongId }
-        Log.d("SongViewModel", "Current song index: $currentIndex, switching to ${if (currentIndex != -1 && currentIndex + 1 < sortedSongs.size) { sortedSongs[currentIndex + 1] } else null}")
-
-        return if (currentIndex != -1 && currentIndex + 1 < sortedSongs.size) { sortedSongs[currentIndex + 1] } else null
-    }
-
-    suspend fun getPreviousSong(currentSongId: Int): Song? {
-        val sortedSongs = dao.getAllSortedByUploadDateOnce(userEmail)
-
-        val currentIndex = sortedSongs.indexOfFirst { it.id == currentSongId }
-        Log.d("SongViewModel", "Current song index: $currentIndex, switching to ${if (currentIndex > 0) { sortedSongs[currentIndex - 1] } else null}")
-
-        return if (currentIndex > 0) { sortedSongs[currentIndex - 1] } else null
+    fun getAllSongs(): Flow<List<Song>> {
+        return dao.getAllSortedByUploadDateAndEmail(userEmail)
     }
 
     fun onEvent(event: SongEvent) {

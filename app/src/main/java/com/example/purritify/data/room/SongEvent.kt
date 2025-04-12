@@ -1,7 +1,5 @@
 package com.example.purritify.data.room
 
-import kotlin.time.Duration
-
 sealed interface SongEvent {
     data object SaveSong: SongEvent
     data class SetTitle(val title: String): SongEvent
@@ -16,6 +14,6 @@ sealed interface SongEvent {
 
     data class DeleteSong(val song: Song): SongEvent
 
-    data class UpdateLastPlayed(val song: Song) : SongEvent;
+    data class UpdateLastPlayed(val song: Song) : SongEvent
     data class UpsertSong(val song: Song): SongEvent
 }
