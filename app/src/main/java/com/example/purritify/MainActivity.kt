@@ -36,6 +36,8 @@ import com.google.android.material.snackbar.Snackbar
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+
+    // Network connectivity components
     private lateinit var networkConnectivityManager: NetworkConnectivityManager
     private lateinit var networkStatusViewModel: NetworkStatusViewModel
     private var noInternetSnackbar: Snackbar? = null

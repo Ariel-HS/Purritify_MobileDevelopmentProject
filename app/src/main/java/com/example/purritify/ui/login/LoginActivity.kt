@@ -8,6 +8,7 @@ import android.text.TextWatcher
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
@@ -17,11 +18,19 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.purritify.MainActivity
 import com.example.purritify.R
 import com.example.purritify.databinding.ActivityLoginBinding
+import com.example.purritify.network.NetworkConnectivityManager
+import com.example.purritify.network.NetworkStatusViewModel
+import com.google.android.material.snackbar.Snackbar
 
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var loginViewModel: LoginViewModel
     private lateinit var binding: ActivityLoginBinding
+
+    // Network connectivity components
+    private lateinit var networkConnectivityManager: NetworkConnectivityManager
+    private lateinit var networkStatusViewModel: NetworkStatusViewModel
+    private var noInternetSnackbar: Snackbar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -39,6 +48,9 @@ class LoginActivity : AppCompatActivity() {
 
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Setup network monitoring
+        setupNetworkMonitoring()
 
         val email = binding.email
         val password = binding.password
@@ -111,6 +123,13 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+
+        // Unregister network callback
+        networkConnectivityManager.unregisterNetworkCallback()
+    }
+
     private fun updateUiWithUser(model: LoggedInUserView) {
         val welcome = getString(R.string.welcome)
         val displayName = model.email
@@ -129,6 +148,44 @@ class LoginActivity : AppCompatActivity() {
 
     private fun showLoginFailed(@StringRes errorString: Int) {
         Toast.makeText(applicationContext, errorString, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun setupNetworkMonitoring() {
+        networkConnectivityManager = NetworkConnectivityManager(applicationContext)
+        networkStatusViewModel = ViewModelProvider(this)[NetworkStatusViewModel::class.java]
+        networkStatusViewModel.initialize(networkConnectivityManager)
+
+        binding.root.post {
+            networkStatusViewModel.isNetworkAvailable?.observe(this) { isAvailable ->
+                if (isAvailable == true) {
+                    // Internet is available
+                    noInternetSnackbar?.dismiss()
+                    noInternetSnackbar = null
+                } else {
+                    // No internet
+                    if (noInternetSnackbar == null) {
+                        noInternetSnackbar = Snackbar.make(
+                            binding.root,
+                            "No internet connection",
+                            Snackbar.LENGTH_INDEFINITE
+                        )
+
+                        val snackbarView = noInternetSnackbar?.view
+
+                        // Set close button
+                        noInternetSnackbar?.setAction("\u00D7") {
+                            noInternetSnackbar?.dismiss()
+                            noInternetSnackbar = null
+                        }
+
+                        val textView = snackbarView?.findViewById<TextView>(com.google.android.material.R.id.snackbar_action)
+                        textView?.textSize = 22f
+
+                        noInternetSnackbar?.show()
+                    }
+                }
+            }
+        }
     }
 }
 
