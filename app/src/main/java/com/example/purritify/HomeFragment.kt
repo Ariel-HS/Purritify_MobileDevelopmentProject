@@ -17,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.room.Room
 import com.bumptech.glide.Glide
+import com.example.purritify.data.model.PlayableSong
 import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongDatabase
 import com.example.purritify.databinding.FragmentHomeBinding
@@ -39,6 +40,7 @@ class HomeFragment : Fragment() {
 
     private var newSongs: List<Song> = emptyList()
     private var recentlyPlayedSongs: List<Song> = emptyList()
+    private var allSongs: List<PlayableSong> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -79,6 +81,12 @@ class HomeFragment : Fragment() {
         // Get songs
         viewLifecycleOwner.lifecycleScope.launch {
             launch {
+                songViewModel.getAllSongs().collect { songs ->
+                    allSongs = songs
+                }
+            }
+
+            launch {
                 songViewModel.newSongsState.collect { state ->
                     val songs = state.songs
                     if (songs is List<*> && songs.all {it is Song}) {
@@ -107,7 +115,7 @@ class HomeFragment : Fragment() {
         // Miniplayer logic
         val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
         miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, songViewModel) {
-            val action = HomeFragmentDirections.actionHomeToPlayer(songId = it.id, true)
+            val action = HomeFragmentDirections.actionHomeToPlayer(songId = it.id, fromMiniplayer = true)
             findNavController().navigate(action)
         }
 

@@ -10,13 +10,14 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.purritify.R
+import com.example.purritify.data.model.PlayableSong
 import com.example.purritify.data.room.Song
 import com.example.purritify.ui.library.SongViewModel
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _currentSong = MutableLiveData<Song?>()
-    val currentSong: LiveData<Song?> get() = _currentSong
+    private val _currentSong = MutableLiveData<PlayableSong?>()
+    val currentSong: LiveData<PlayableSong?> get() = _currentSong
 
     private var mediaPlayer: MediaPlayer? = null
     private val handler = Handler(Looper.getMainLooper())
@@ -39,7 +40,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun setCurrentSong(song: Song) {
+    fun setCurrentSong(song: PlayableSong) {
         _currentSong.value = song
     }
 
@@ -47,39 +48,63 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         return mediaPlayer?.isPlaying == true
     }
 
-    fun playSong(uri: Uri, songViewModel: SongViewModel) {
+    fun playSong(uri: Uri, songViewModel: SongViewModel?) {
+        Log.d("PlayerViewModel", "Play Song $uri")
         mediaPlayer?.release()
 
         val context = getApplication<Application>()
         val contentResolver = context.contentResolver
-        var tempMediaPlayer: MediaPlayer? = null
+        var tempMediaPlayer = MediaPlayer()
 
         try {
-            contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
-                tempMediaPlayer = MediaPlayer().apply {
-                    setDataSource(pfd.fileDescriptor)
-                    prepare()
+            if (uri.scheme == "http" || uri.scheme == "https") {
+                tempMediaPlayer.setDataSource(uri.toString())
+                tempMediaPlayer.setOnPreparedListener {
+                    it.start()
+                    _duration.value = it.duration
+                    _isPaused.value = false
+                    handler.post(updateRunnable)
+                }
+                tempMediaPlayer.setOnCompletionListener {
+                    _isPaused.value = true
+                }
+                tempMediaPlayer.prepareAsync()
+            } else {
+                contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+                    tempMediaPlayer.setDataSource(pfd.fileDescriptor)
+                    tempMediaPlayer.prepare()
+                    tempMediaPlayer.start()
+                    _duration.value = tempMediaPlayer.duration
+                    _isPaused.value = false
+                    handler.post(updateRunnable)
+                    tempMediaPlayer.setOnCompletionListener {
+                        _isPaused.value = true
+                    }
                 }
             }
+            mediaPlayer = tempMediaPlayer
         } catch (_: Exception) {
             Log.d("PlayerViewModel", "Song file doesn't exist at $uri, defaulting to sample")
 
-            tempMediaPlayer = MediaPlayer.create(context, R.raw.sample)
-        }
-
-        mediaPlayer = tempMediaPlayer?.apply {
-            _duration.value = duration
-            start()
-            _isPaused.value = false
-            handler.post(updateRunnable)
-
-            setOnCompletionListener {
-                _isPaused.value = true
+            mediaPlayer = MediaPlayer.create(context, R.raw.sample).apply {
+                start()
+                _duration.value = duration
+                _isPaused.value = false
+                handler.post(updateRunnable)
+                setOnCompletionListener {
+                    _isPaused.value = true
+                }
             }
         }
 
-        // Update lastPlayed value ini db
-        currentSong.value?.let { handleLastPlayedUpdate(it, songViewModel, this) }
+        // Update lastPlayed value in db
+        if (songViewModel == null) {
+            return
+        }
+
+        currentSong.value?.let {
+            if (it is Song) handleLastPlayedUpdate(it, songViewModel, this)
+        }
     }
 
     fun togglePause() {

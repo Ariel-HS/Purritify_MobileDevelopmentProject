@@ -49,6 +49,11 @@
                 android:name="fromMiniplayer"
                 app:argType="boolean"
                 android:defaultValue="false"/>
+            <argument
+                android:name="mode"
+                app:argType="string"
+                android:defaultValue="offline"
+                />
     </fragment>
     <fragment
         android:id="@+id/chartFragment"
@@ -58,6 +63,9 @@
         <action
             android:id="@+id/action_chart_to_home"
             app:destination="@id/home_page"/>
+        <action
+            android:id="@+id/action_chart_to_player"
+            app:destination="@id/player"/>
         <argument
             android:name="chartType"
             app:argType="string"

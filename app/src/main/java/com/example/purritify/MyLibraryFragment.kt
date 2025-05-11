@@ -146,7 +146,7 @@ class MyLibraryFragment : Fragment(), SongAdapter.ItemClickListener {
     }
 
     override fun onItemClickListener(song: Song) {
-        val action = HomeFragmentDirections.actionHomeToPlayer(
+        val action = MyLibraryFragmentDirections.actionLibraryToPlayer(
             songId = song.id,
         )
         findNavController().navigate(action)

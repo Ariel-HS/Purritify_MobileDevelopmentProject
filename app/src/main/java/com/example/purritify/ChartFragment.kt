@@ -16,6 +16,8 @@ import com.example.purritify.ui.chart.ChartAdapter
 import com.example.purritify.ui.chart.ChartViewModel
 import com.example.purritify.ui.chart.ChartViewModelFactory
 import com.example.purritify.ui.login.TokenManager
+import com.example.purritify.ui.player.MiniplayerView
+import com.example.purritify.ui.player.PlayerViewModel
 
 class ChartFragment : Fragment(), ChartAdapter.ItemClickListener {
     private val args: ChartFragmentArgs by navArgs()
@@ -26,6 +28,8 @@ class ChartFragment : Fragment(), ChartAdapter.ItemClickListener {
 
     private lateinit var chartViewModel: ChartViewModel
     private lateinit var chartAdapter: ChartAdapter
+
+    private lateinit var playerViewModel: PlayerViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,9 +53,18 @@ class ChartFragment : Fragment(), ChartAdapter.ItemClickListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        playerViewModel = ViewModelProvider(requireActivity())[PlayerViewModel::class.java]
+
         setupRecyclerView()
         setupOnClickListener()
         setupView()
+
+        // Miniplayer logic
+        val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
+        miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, null) {
+            val action = ChartFragmentDirections.actionChartToPlayer(songId = it.id, fromMiniplayer = true, mode = chartType)
+            findNavController().navigate(action)
+        }
     }
 
     private fun setupOnClickListener() {
@@ -92,6 +105,8 @@ class ChartFragment : Fragment(), ChartAdapter.ItemClickListener {
     }
 
     override fun onItemClickListener(song: ChartSong) {
-        // TODO("Not yet implemented")
+        Log.d("ChartFragment", "${song.id}")
+        val action = ChartFragmentDirections.actionChartToPlayer(songId = song.id, mode = chartType)
+        findNavController().navigate(action)
     }
 }

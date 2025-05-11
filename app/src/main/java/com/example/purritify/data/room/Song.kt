@@ -2,21 +2,24 @@ package com.example.purritify.data.room
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.example.purritify.data.model.PlayableSong
 import java.util.Date
 
 @Entity
 data class Song(
-    val title: String,
-    val artist: String,
-    val pathArtwork: String,
-    val pathFile: String,
-    val duration: String,
+    override val title: String,
+    override val artist: String,
+    override val pathArtwork: String,
+    override val pathFile: String,
+    override val duration: String,
     val liked: Boolean,
     val userEmail: String,
 
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    override val id: Int = 0,
 
     val lastPlayed: Date? = null,
     val uploadDate: Date
-)
+) : PlayableSong {
+//    override val isOnline: Boolean = false
+}
