@@ -111,12 +111,7 @@ class HomeFragment : Fragment() {
             findNavController().navigate(action)
         }
 
-        // Logout
-        binding.homeToolbar.logoutButton.setOnClickListener {
-            logout()
-        }
-
-
+        setupOnClickListener()
     }
 
     private fun logout() {
@@ -211,6 +206,23 @@ class HomeFragment : Fragment() {
             Log.d("HomeFragment", "Cover doesn't exist at $coverPath, defaulting to sample cover")
 
             coverView.setImageResource(R.drawable.sample_cover)
+        }
+    }
+
+    private fun setupOnClickListener() {
+        // Logout
+        binding.homeToolbar.logoutButton.setOnClickListener {
+            logout()
+        }
+
+        binding.globalChart.setOnClickListener {
+            val action = HomeFragmentDirections.actionHomeToChart(chartType = "global")
+            findNavController().navigate(action)
+        }
+
+        binding.localChart.setOnClickListener {
+            val action = HomeFragmentDirections.actionHomeToChart(chartType = "local")
+            findNavController().navigate(action)
         }
     }
 }

@@ -42,17 +42,65 @@
             android:paddingHorizontal="18dp"
             >
 
-<!--            New Songs-->
-
             <TextView
                 android:id="@+id/home_new_songs_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/new_songs"
+                android:text="@string/chart"
                 android:textColor="@android:color/white"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:layout_gravity="top" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="6dp"
+                android:orientation="horizontal"
+                >
+
+                <ImageButton
+                    android:id="@+id/globalChart"
+                    android:layout_width="132dp"
+                    android:layout_height="132dp"
+                    android:src="@drawable/chart_global_cover"
+                    android:scaleType="fitCenter"
+                    android:background="@android:color/transparent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:contentDescription="@string/global_chart"
+                    />
+
+                <ImageButton
+                    android:id="@+id/localChart"
+                    android:layout_width="132dp"
+                    android:layout_height="132dp"
+                    android:contentDescription="@string/global_chart"
+                    android:src="@drawable/chart_local_cover"
+                    android:scaleType="fitCenter"
+                    android:background="@android:color/transparent"
+                    app:layout_constraintStart_toEndOf="@+id/globalChart"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:layout_marginStart="@dimen/view_margin"
+                    />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+<!--            New Songs-->
+
+            <TextView
+                android:id="@+id/home_new_songs_text2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top"
+                android:text="@string/new_songs"
+                android:textColor="@android:color/white"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="6dp"
+                />
 
             <HorizontalScrollView
                 android:layout_width="match_parent"

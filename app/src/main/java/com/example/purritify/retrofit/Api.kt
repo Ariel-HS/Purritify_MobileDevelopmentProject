@@ -1,5 +1,6 @@
 package com.example.purritify.retrofit
 
+import com.example.purritify.data.model.ChartSong
 import com.example.purritify.data.model.LoginRequest
 import com.example.purritify.data.model.LoginResponse
 import com.example.purritify.data.model.ProfileResponse
@@ -12,6 +13,7 @@ import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Path
 
 
 interface Api {
@@ -25,6 +27,11 @@ interface Api {
         @Header("Authorization") token: String
     ): Call<ProfileResponse>
 
+    @GET("/api/profile")
+    suspend fun fetchProfileSuspend(
+        @Header("Authorization") token: String
+    ): ProfileResponse
+
     @GET("api/verify-token")
     suspend fun verifyToken(
         @Header("Authorization") authHeader: String
@@ -34,6 +41,16 @@ interface Api {
     suspend fun refreshToken(
         @Body refreshTokenRequest: RefreshTokenRequest
     ): Response<RefreshTokenResponse>
+
+    @GET("/api/top-songs/global")
+    suspend fun fetchGlobalSongs(
+
+    ): List<ChartSong>
+
+    @GET("/api/top-songs/{country-code}")
+    suspend fun fetchLocalSongs(
+        @Path(value = "country-code", encoded = true) countryCode: String
+    ): List<ChartSong>
 
     companion object {
         const val BASE_URL: String = "http://34.101.226.132:3000"

@@ -52,4 +52,7 @@
     <string name="home_toolbar_hamburger_button">Hamburger menu button</string>
     <string name="password_title">Password</string>
     <string name="email_title">Email</string>
+    <string name="chart">Chart</string>
+    <string name="global_chart">Top 50 global songs</string>
+    <string name="chart_recycler_view">List of top songs</string>
 </resources>

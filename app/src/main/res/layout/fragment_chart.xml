@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ChartFragment"
+    android:background="#121212"
+    >
+
+    <!-- Close Button -->
+    <ImageButton
+        android:id="@+id/closeButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="8dp"
+        android:backgroundTint="@android:color/transparent"
+        android:contentDescription="@string/close_player_screen"
+        android:src="@drawable/caret"
+        app:layout_constraintBaseline_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:src="@drawable/chart_global_cover"
+        android:layout_marginTop="@dimen/view_margin"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/closeButton" />
+
+    <!-- Play -->
+    <FrameLayout
+        android:id="@+id/pausePlayContainer"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@drawable/circle"
+        android:backgroundTint="#1DB95B"
+        android:clickable="true"
+        android:focusable="true"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="24dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView">
+
+        <!-- Play -->
+        <ImageView
+            android:id="@+id/playIcon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="4dp"
+            android:contentDescription="@string/play_button"
+            android:scaleType="centerInside"
+            android:src="@drawable/play"
+            />
+
+        <!-- Pause -->
+        <ImageView
+            android:id="@+id/pauseIcon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/pause_button"
+            android:scaleType="centerInside"
+            android:src="@drawable/pause"
+            android:visibility="gone"
+            />
+
+    </FrameLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/chartRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pausePlayContainer"
+        app:layout_constraintBottom_toTopOf="@id/miniPlayer"
+        android:layout_marginTop="@dimen/view_margin"
+        android:layout_marginHorizontal="16dp"
+        android:contentDescription="@string/chart_recycler_view"
+        />
+
+    <!-- Mini Player -->
+    <com.example.purritify.ui.player.MiniplayerView
+        android:id="@+id/miniPlayer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
