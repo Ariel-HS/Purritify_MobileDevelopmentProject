@@ -38,6 +38,9 @@ interface SongDao {
     @Query("SELECT * FROM song WHERE title LIKE :title ")
     fun searchByTitle(title: String): Flow<List<Song>>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM song WHERE title = :title)")
+    suspend fun isSongExistByTitle(title: String): Boolean
+
     @Query("SELECT * FROM song WHERE artist LIKE :artist ")
     fun searchByArtist(artist: String): Flow<List<Song>>
 

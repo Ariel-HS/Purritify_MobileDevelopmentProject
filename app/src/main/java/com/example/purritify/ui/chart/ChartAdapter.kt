@@ -1,13 +1,20 @@
 package com.example.purritify.ui.chart
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.example.purritify.R
 import com.example.purritify.data.model.ChartSong
 import com.example.purritify.data.room.Song
+import com.example.purritify.data.room.SongDatabase
 import com.example.purritify.databinding.ChartSongCardBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ChartAdapter(
     private val listener: ItemClickListener
@@ -40,8 +47,23 @@ class ChartAdapter(
                 load(song.artwork)
                     .into(artwork)
 
-                downloadButton.setOnClickListener {
-                    listener.onDownloadButtonClickListener(song)
+                val context = view.root.context
+                val db = SongDatabase.getInstance(context)
+                val songDao = db.songDao
+
+                // TODO check and block (VISIBLE.GONE) download button if already downloaded
+                CoroutineScope(Dispatchers.IO).launch {
+                    val isDownloaded = songDao.isSongExistByTitle(song.title)
+                    withContext(Dispatchers.Main) {
+                        if (isDownloaded) {
+                            downloadButton.setImageResource(R.drawable.download_done_24)
+                        } else {
+                            downloadButton.visibility = View.VISIBLE
+                            downloadButton.setOnClickListener {
+                                listener.onDownloadButtonClickListener(song)
+                            }
+                        }
+                    }
                 }
             }
         }
