@@ -31,6 +31,7 @@ import com.example.purritify.data.room.Song
 import com.example.purritify.data.room.SongEvent
 import com.example.purritify.databinding.DialogAddSongBinding
 import com.example.purritify.databinding.DialogEditSongBinding
+import java.util.Locale
 
 class EditSongDialogFragment(
     private val onEvent: (SongEvent) -> Unit,
@@ -279,7 +280,19 @@ class EditSongDialogFragment(
                             this.artist = artist.toString()
                         }
 
-                        val duration = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                        val durationStr = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                        val durationMs = durationStr?.toLongOrNull() ?: 0L
+
+                        val totalSeconds = durationMs / 1000
+                        val hours = totalSeconds / 3600
+                        val minutes = (totalSeconds % 3600) / 60
+                        val seconds = totalSeconds % 60
+
+                        val duration = if (hours > 0)
+                            String.format(java.util.Locale.US, "%d:%02d:%02d", hours, minutes, seconds)
+                        else
+                            String.format(java.util.Locale.US, "%d:%02d", minutes, seconds)
+
                         Log.d("CHECK DURATION", duration.toString())
                         if (duration.toString().isNotEmpty()) {
                             binding.durationTextView.text = getString(R.string.add_song_dialog_duration_text, duration)
@@ -350,7 +363,28 @@ class EditSongDialogFragment(
 
         binding.titleInput.setText(song.title)
         binding.artistInput.setText(song.artist)
-        binding.durationTextView.text = getString(R.string.add_song_dialog_duration_text, song.duration)
+
+        val durationStr = song.duration
+
+        val timePattern = Regex("""^\d+:\d{2}(:\d{2})?$""")
+        val duration = if (timePattern.matches(durationStr)) {
+            // Already formatted like M:SS or H:MM:SS
+            durationStr
+        } else {
+            val durationMs = durationStr.toLongOrNull() ?: 0L
+            val totalSeconds = durationMs / 1000
+            val hours = totalSeconds / 3600
+            val minutes = (totalSeconds % 3600) / 60
+            val seconds = totalSeconds % 60
+
+            if (hours > 0)
+                String.format(Locale.US, "%d:%02d:%02d", hours, minutes, seconds)
+            else
+                String.format(Locale.US, "%d:%02d", minutes, seconds)
+        }
+
+
+        binding.durationTextView.text = getString(R.string.add_song_dialog_duration_text, duration)
     }
 
     private fun setupVars() {

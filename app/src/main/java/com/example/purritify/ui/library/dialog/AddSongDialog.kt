@@ -274,12 +274,24 @@ class AddSongDialogFragment(
                             onEvent(SongEvent.SetArtist(artist.toString()))
                         }
 
-                        val duration = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-                        Log.d("CHECK DURATION", duration.toString())
-                        if (duration.toString().isNotEmpty()) {
+                        val durationStr = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                        val durationMs = durationStr?.toLongOrNull() ?: 0L
+
+                        val totalSeconds = durationMs / 1000
+                        val hours = totalSeconds / 3600
+                        val minutes = (totalSeconds % 3600) / 60
+                        val seconds = totalSeconds % 60
+
+                        val duration = if (hours > 0)
+                            String.format(java.util.Locale.US, "%d:%02d:%02d", hours, minutes, seconds)
+                        else
+                            String.format(java.util.Locale.US, "%d:%02d", minutes, seconds)
+
+                        Log.d("CHECK DURATION", duration)
+                        if (duration.isNotEmpty()) {
                             binding.durationTextView.text = getString(R.string.add_song_dialog_duration_text, duration)
-                            onEvent(SongEvent.SetDuration(duration.toString()))
-                            this.duration = duration.toString()
+                            onEvent(SongEvent.SetDuration(duration))
+                            this.duration = duration
                         } else {
                             binding.durationTextView.text = getString(R.string.add_song_dialog_duration_text, "Unknown")
                         }

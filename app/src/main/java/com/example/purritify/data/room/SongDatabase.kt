@@ -22,7 +22,7 @@ abstract class SongDatabase: RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     SongDatabase::class.java,
-                    "song_db"
+                    "songs.db"
                 )
                     .addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
                 INSTANCE = instance

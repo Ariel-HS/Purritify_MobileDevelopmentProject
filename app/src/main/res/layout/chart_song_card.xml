@@ -69,4 +69,19 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <ImageButton
+        android:id="@+id/downloadButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="@dimen/view_margin"
+        android:background="@android:color/transparent"
+        android:clickable="true"
+        android:contentDescription="@string/download_online_song"
+        android:padding="8dp"
+        android:scaleType="fitXY"
+        android:src="@drawable/download_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

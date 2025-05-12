@@ -52,6 +52,13 @@
             android:name=".service.TokenRefreshService"
             android:enabled="true"
             android:exported="false" />
+        <receiver
+            android:name=".service.DownloadCompleteReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.DOWNLOAD_COMPLETE" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

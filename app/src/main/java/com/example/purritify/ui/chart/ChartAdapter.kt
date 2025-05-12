@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.purritify.data.model.ChartSong
+import com.example.purritify.data.room.Song
 import com.example.purritify.databinding.ChartSongCardBinding
 
 class ChartAdapter(
@@ -24,6 +25,7 @@ class ChartAdapter(
 
     class ViewHolder(
         private val view: ChartSongCardBinding,
+        private val listener: ItemClickListener
     ) : RecyclerView.ViewHolder(view.root) {
         val title = view.songTitle
         val artist = view.songArtist
@@ -37,6 +39,10 @@ class ChartAdapter(
                 Glide.with(view.root.context).
                 load(song.artwork)
                     .into(artwork)
+
+                downloadButton.setOnClickListener {
+                    listener.onDownloadButtonClickListener(song)
+                }
             }
         }
     }
@@ -46,7 +52,7 @@ class ChartAdapter(
         // Create a new view, which defines the UI of the list item
         val view = ChartSongCardBinding.inflate(LayoutInflater.from(viewGroup.context), viewGroup, false)
 
-        return ViewHolder(view)
+        return ViewHolder(view, listener)
     }
 
     // Replace the contents of a view (invoked by the layout manager)
@@ -54,6 +60,7 @@ class ChartAdapter(
         viewHolder.itemView.setOnClickListener {
             listener.onItemClickListener(songs[position])
         }
+
         viewHolder.bind(songs[position])
     }
 
@@ -62,5 +69,6 @@ class ChartAdapter(
 
     interface ItemClickListener {
         fun onItemClickListener(song: ChartSong)
+        fun onDownloadButtonClickListener(song: ChartSong)
     }
 }

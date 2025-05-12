@@ -103,9 +103,9 @@
         <!-- Like Button -->
         <ImageButton
             android:id="@+id/heartButton"
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:background="@drawable/heart"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@android:color/transparent"
             android:contentDescription="@string/close_player_screen"
             android:src="@drawable/heart"
             android:layout_margin="4dp"

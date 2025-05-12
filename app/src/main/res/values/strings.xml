@@ -55,4 +55,5 @@
     <string name="chart">Chart</string>
     <string name="global_chart">Top 50 global songs</string>
     <string name="chart_recycler_view">List of top songs</string>
+    <string name="download_online_song">download online song</string>
 </resources>
