@@ -13,6 +13,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -41,6 +42,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Locale
 import androidx.core.graphics.toColorInt
+import com.example.purritify.ui.profile.EditProfileDialog
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
@@ -53,6 +57,8 @@ class ProfileFragment : Fragment() {
     private var songs: Int = 0
     private var liked: Int = 0
     private var listened: Int = 0
+
+    private lateinit var location: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -111,6 +117,9 @@ class ProfileFragment : Fragment() {
                 // Get profile picture
                 val profileUrl = "${Api.BASE_URL}/uploads/profile-picture/${profile.profilePhoto}"
 
+                // Set location
+                location = profile.location
+
                 loadProfileCard(profile.username, Locale("", profile.location).displayCountry, profileUrl)
                 adjustBGColor(profileUrl)
             }
@@ -148,6 +157,9 @@ class ProfileFragment : Fragment() {
         val locationTextView = cardView.findViewById<TextView>(R.id.location)
         val profileImageView = cardView.findViewById<ImageView>(R.id.profilePicture)
 
+        val miniEditProfileButton = cardView.findViewById<ImageButton>(R.id.editButton)
+        setupEditProfile(binding.editProfileButton, miniEditProfileButton)
+
         // Set data
         nameTextView.text = name
         locationTextView.text = location
@@ -156,6 +168,7 @@ class ProfileFragment : Fragment() {
             .into(profileImageView)
 
         // Display card
+        container.removeAllViews()
         container.addView(cardView)
     }
 
@@ -211,6 +224,7 @@ class ProfileFragment : Fragment() {
             })
     }
 
+    @SuppressLint("SetTextI18n")
     private fun setupNetworkMonitoring() {
         // Get reference to the NetworkStatusViewModel
         val networkStatusViewModel = (requireActivity() as MainActivity).getNetworkStatusViewModel()
@@ -248,6 +262,33 @@ class ProfileFragment : Fragment() {
                     Log.d("ProfileFragment", "Network reconnected, refreshing profile data")
                     profileViewModel.fetchProfile("Bearer $it")
                 }
+            }
+        }
+    }
+
+    @SuppressLint("MemberExtensionConflict")
+    private fun setupEditProfile(vararg buttons: View) {
+        buttons.forEach { button ->
+            button.setOnClickListener {
+                EditProfileDialog(
+                    onSubmit = { location, profilePhoto ->
+                        val token = TokenManager.getInstance(requireContext()).getToken()
+                        if (token != null) {
+                            profileViewModel.updateProfile(
+                                "Berar $token",
+                                location?.toRequestBody("text/plain".toMediaTypeOrNull()),
+                                profilePhoto,
+                                onSuccess = {
+                                    Toast.makeText(requireContext(), "Profile updated!", Toast.LENGTH_SHORT).show()
+                                    profileViewModel.fetchProfile("Bearer $token")
+                                },
+                                onError = {
+                                    Toast.makeText(requireContext(), "Update failed: $it", Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }
+                    }
+                ).show(childFragmentManager, "EditProfileDialog")
             }
         }
     }
