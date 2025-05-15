@@ -66,6 +66,11 @@ interface Api {
         @Part profilePhoto: MultipartBody.Part?
     ): Response<MessageResponse>
 
+    @GET("/api/songs/{song_id}")
+    suspend fun fetchDeepLinkedSongs(
+        @Path("song_id") songId: Int
+    ): Response<ChartSong>
+
     companion object {
         const val BASE_URL: String = "http://34.101.226.132:3000"
     }

@@ -1,7 +1,7 @@
 package com.example.purritify.ui.login
 
-import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -32,16 +32,25 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var networkStatusViewModel: NetworkStatusViewModel
     private var noInternetSnackbar: Snackbar? = null
 
+    private var deepLinkUri: Uri? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
 
         super.onCreate(savedInstanceState)
 
+        // Deep link handling
+        deepLinkUri = intent?.data
+
         // Check if user is already logged in
         val tokenManager = TokenManager.getInstance(applicationContext)
         if (tokenManager.getToken() != null) {
             // User already logged in, go directly to MainActivity
-            startActivity(Intent(this, MainActivity::class.java))
+            val intent = Intent(this, MainActivity::class.java)
+
+            deepLinkUri?.let { intent.data = it }
+
+            startActivity(intent)
             finish()
             return
         }
@@ -83,7 +92,7 @@ class LoginActivity : AppCompatActivity() {
             if (loginResult.success != null) {
                 updateUiWithUser(loginResult.success)
 
-                setResult(Activity.RESULT_OK)
+                setResult(RESULT_OK)
 
                 //Complete and destroy login activity once successful
                 finish()
@@ -142,8 +151,11 @@ class LoginActivity : AppCompatActivity() {
         ).show()
 
         // Add flags to clear back stack
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        val intent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            deepLinkUri?.let { data = it }
+        }
+
         startActivity(intent)
         finish()
     }

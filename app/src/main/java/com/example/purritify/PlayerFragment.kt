@@ -1,5 +1,7 @@
 package com.example.purritify
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -36,6 +38,10 @@ enum class Direction {
     NEXT, PREVIOUS
 }
 
+// Run
+// adb shell am start -a android.intent.action.VIEW -d "purrytify://song/161" com.example.purritify
+// In terminal to test deep links.
+
 class PlayerFragment : Fragment() {
     private val args: PlayerFragmentArgs by navArgs()
     private var songId: Int = -1
@@ -61,7 +67,9 @@ class PlayerFragment : Fragment() {
         mode = args.mode
         songId = args.songId
 
-        if (mode != "local" && mode != "global" && mode != "offline") {
+        Log.d("PlayerFragment", "${fromMiniplayer}, ${mode}, ${songId}")
+
+        if (mode != "local" && mode != "global" && mode != "offline" && mode != "deepLink") {
             Log.e("PlayerFragment", "Invalid mode $mode")
             return
         }
@@ -131,6 +139,8 @@ class PlayerFragment : Fragment() {
                     handleData()
                     handlePlaybackState()
                 }
+            } else if (mode == "deepLink") {
+                fetchDeepLinkedSong(songId)
             } else {
                 val token = TokenManager.getInstance(requireContext()).getToken()
                 if (token != null) {
@@ -197,8 +207,19 @@ class PlayerFragment : Fragment() {
             binding.songDurationAt.text = handleTime(it)
         }
 
-        // remove like button if online
-        if (mode != "offline") binding.heartButton.visibility = View.GONE
+        // remove like button if online & enable  sharing
+        if (mode != "offline") {
+            binding.heartButton.visibility = View.GONE
+
+            val shareButton = binding.shareButton
+
+            shareButton.visibility = View.VISIBLE
+            shareButton.setOnClickListener {
+                currentSong?.let {
+                    handleSharing(it)
+                }
+            }
+        }
 
         playerViewModel.isPaused.observe(viewLifecycleOwner) { animatePauseIcon(it, binding.playIcon, binding.pauseIcon) }
     }
@@ -292,4 +313,51 @@ class PlayerFragment : Fragment() {
             }, 200)
         }
     }
+
+    // ---------------------------------------------------------------- Deeplink & Share  ----------------------------------------------------------------------------------
+    private fun constructDeeplink(song: PlayableSong): Uri { return "purrytify://song/${song.id}".toUri() }
+
+    private fun handleSharing(song: PlayableSong) {
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, "${constructDeeplink(song)}")
+        }
+
+        val chooser = Intent.createChooser(shareIntent, "Share song via...")
+        startActivity(chooser)
+    }
+
+    private fun fetchDeepLinkedSong(songId: Int) {
+        lifecycleScope.launch {
+            try {
+                val api = RetrofitClient.getInstance().getMyApi()
+                val response = api.fetchDeepLinkedSongs(songId)
+                if (response.isSuccessful) {
+                    val chartSong = response.body()
+                    if (chartSong != null) {
+                        Log.d("PlayerFragment", "ChartSong: ${chartSong}")
+
+                        currentSong = chartSong
+                        currentSong?.let {
+                            Log.d("PlayerFragment", "Generated deeplink: ${constructDeeplink(it)}")
+                        }
+
+                        // Update UI
+                        handleData()
+                        handlePlaybackState()
+                    } else {
+                        Toast.makeText(requireContext(), "Song not found", Toast.LENGTH_SHORT).show()
+
+                        findNavController().popBackStack()
+                    }
+                } else {
+                    Log.e("PlayerFragment", "Error response: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("PlayerFragment", "Failed to fetch song: $songId", e)
+            }
+        }
+    }
+
+
 }

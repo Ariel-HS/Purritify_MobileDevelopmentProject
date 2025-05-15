@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModelProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import com.example.purritify.databinding.ActivityMainBinding
 import com.example.purritify.network.NetworkConnectivityManager
@@ -52,6 +53,9 @@ class MainActivity : AppCompatActivity() {
 
         val navController = this.findNavController(R.id.fragment_container_view)
 
+        // Handle deep links
+        handleIntent(navController)
+
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             // Pop player fragment before navigating
             navController.popBackStack(R.id.player, true)
@@ -70,6 +74,38 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 else -> false
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+
+        val navController = this.findNavController(R.id.fragment_container_view)
+
+        handleIntent(navController)
+    }
+
+    private fun handleIntent(navController: NavController) {
+        // Handle deep links
+        intent.data?.let { uri ->
+            val pathSegments = uri.pathSegments
+            if (uri.scheme == "purrytify" && uri.host == "song" && pathSegments.isNotEmpty()) {
+                val songIdStr = pathSegments[0]
+                val songId = songIdStr.toIntOrNull()
+                if (songId != null) {
+                    val action = MainNavDirections.actionGlobalPlayer(
+                        songId = songId,
+                        fromMiniplayer = false,
+                        mode = "deepLink"
+                    )
+
+                    navController.navigate(action)
+                } else {
+                    Log.w("MainActivityDeeplink", "Invalid song ID in URI: $songIdStr")
+                }
+            } else {
+                Log.w("MainActivityDeeplink", "Unhandled URI: $uri")
             }
         }
     }

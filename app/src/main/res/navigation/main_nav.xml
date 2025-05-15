@@ -54,6 +54,9 @@
                 app:argType="string"
                 android:defaultValue="offline"
                 />
+
+            <deepLink
+                app:uri="purritify://song/{songId}"/>
     </fragment>
     <fragment
         android:id="@+id/chartFragment"
@@ -71,4 +74,8 @@
             app:argType="string"
             android:defaultValue="global"/>
     </fragment>
+
+    <action
+        android:id="@+id/action_global_player"
+        app:destination="@id/player" />
 </navigation>

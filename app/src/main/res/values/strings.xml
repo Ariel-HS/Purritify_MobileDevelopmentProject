@@ -58,4 +58,6 @@
     <string name="download_online_song">download online song</string>
     <string name="country_code_e_g_id">Country Code (e.g. ID)</string>
     <string name="location">Location:</string>
+    <string name="like_button">Like button</string>
+    <string name="share_button">Share button</string>
 </resources>
