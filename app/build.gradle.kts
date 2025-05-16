@@ -62,6 +62,8 @@ dependencies {
     implementation(libs.play.services.base)
     implementation(libs.converter.gson)
     implementation(libs.okhttp)
+    implementation("com.google.zxing:core:3.5.3")
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation(libs.logging.interceptor)
     implementation(libs.androidx.room.ktx)
     implementation(libs.play.services.location)

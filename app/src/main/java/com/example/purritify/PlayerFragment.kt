@@ -1,7 +1,5 @@
 package com.example.purritify
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -30,6 +28,7 @@ import androidx.navigation.fragment.navArgs
 import com.example.purritify.data.model.PlayableSong
 import com.example.purritify.retrofit.RetrofitClient
 import com.example.purritify.ui.login.TokenManager
+import com.example.purritify.ui.player.ShareDialog
 import com.example.purritify.ui.player.animatePauseIcon
 import com.example.purritify.ui.player.handleCover
 import com.example.purritify.ui.player.handleLike
@@ -214,11 +213,8 @@ class PlayerFragment : Fragment() {
             val shareButton = binding.shareButton
 
             shareButton.visibility = View.VISIBLE
-            shareButton.setOnClickListener {
-                currentSong?.let {
-                    handleSharing(it)
-                }
-            }
+            shareButton.setOnClickListener { currentSong?.let { Log.d("Share", "TEST")
+                ShareDialog(it.id).show(childFragmentManager, "ShareDialog") } }
         }
 
         playerViewModel.isPaused.observe(viewLifecycleOwner) { animatePauseIcon(it, binding.playIcon, binding.pauseIcon) }
@@ -315,18 +311,6 @@ class PlayerFragment : Fragment() {
     }
 
     // ---------------------------------------------------------------- Deeplink & Share  ----------------------------------------------------------------------------------
-    private fun constructDeeplink(song: PlayableSong): Uri { return "purrytify://song/${song.id}".toUri() }
-
-    private fun handleSharing(song: PlayableSong) {
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, "${constructDeeplink(song)}")
-        }
-
-        val chooser = Intent.createChooser(shareIntent, "Share song via...")
-        startActivity(chooser)
-    }
-
     private fun fetchDeepLinkedSong(songId: Int) {
         lifecycleScope.launch {
             try {
@@ -338,9 +322,6 @@ class PlayerFragment : Fragment() {
                         Log.d("PlayerFragment", "ChartSong: ${chartSong}")
 
                         currentSong = chartSong
-                        currentSong?.let {
-                            Log.d("PlayerFragment", "Generated deeplink: ${constructDeeplink(it)}")
-                        }
 
                         // Update UI
                         handleData()

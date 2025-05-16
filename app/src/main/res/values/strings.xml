@@ -60,4 +60,7 @@
     <string name="location">Location:</string>
     <string name="like_button">Like button</string>
     <string name="share_button">Share button</string>
+    <string name="share">Share</string>
+    <string name="share_via_link">Share via Link</string>
+    <string name="share_via_qr_code">Share via QR Code</string>
 </resources>

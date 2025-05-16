@@ -17,7 +17,7 @@
         android:padding="@dimen/view_padding">
 
         <TextView
-            android:id="@+id/editProfileLabel"
+            android:id="@+id/ShareLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
@@ -42,7 +42,7 @@
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/editProfileLabel">
+            app:layout_constraintTop_toBottomOf="@id/ShareLabel">
 
             <ImageButton
                 android:id="@+id/uploadPhotoButton"
