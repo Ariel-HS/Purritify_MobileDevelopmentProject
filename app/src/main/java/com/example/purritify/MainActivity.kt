@@ -4,11 +4,14 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModelProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -86,30 +89,6 @@ class MainActivity : AppCompatActivity() {
         handleIntent(navController)
     }
 
-    private fun handleIntent(navController: NavController) {
-        // Handle deep links
-        intent.data?.let { uri ->
-            val pathSegments = uri.pathSegments
-            if (uri.scheme == "purrytify" && uri.host == "song" && pathSegments.isNotEmpty()) {
-                val songIdStr = pathSegments[0]
-                val songId = songIdStr.toIntOrNull()
-                if (songId != null) {
-                    val action = MainNavDirections.actionGlobalPlayer(
-                        songId = songId,
-                        fromMiniplayer = false,
-                        mode = "deepLink"
-                    )
-
-                    navController.navigate(action)
-                } else {
-                    Log.w("MainActivityDeeplink", "Invalid song ID in URI: $songIdStr")
-                }
-            } else {
-                Log.w("MainActivityDeeplink", "Unhandled URI: $uri")
-            }
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         try {
@@ -120,6 +99,56 @@ class MainActivity : AppCompatActivity() {
 
         // Unregister network callback
         networkConnectivityManager.unregisterNetworkCallback()
+    }
+
+    private fun handleIntent(navController: NavController) {
+        // Handle deep links
+        intent.data?.let { openPlayer(navController, it)
+        }
+    }
+
+    private fun openPlayer(navController: NavController, uri: Uri) {
+        val pathSegments = uri.pathSegments
+        if (uri.scheme == "purrytify" && uri.host == "song" && pathSegments.isNotEmpty()) {
+            val songIdStr = pathSegments[0]
+            val songId = songIdStr.toIntOrNull()
+            if (songId != null) {
+                val action = MainNavDirections.actionGlobalPlayer(
+                    songId = songId,
+                    fromMiniplayer = false,
+                    mode = "deepLink"
+                )
+
+                navController.navigate(action)
+            } else {
+                Log.w("MainActivityDeeplink", "Invalid song ID in URI: $songIdStr")
+            }
+        } else {
+            Log.w("MainActivityDeeplink", "Unhandled URI: $uri")
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        val navController = this.findNavController(R.id.fragment_container_view)
+
+        if (requestCode == REQUEST_CODE_QR_SCAN && resultCode == RESULT_OK) {
+            val result = data?.getStringExtra("SCAN_RESULT")
+
+            result?.let {
+                if (isValidDeepLink(it)) openPlayer(navController, it.toUri())
+                else {
+                    Toast.makeText(this, "Invalid QR", Toast.LENGTH_SHORT).show()
+                    Log.d("QR SCANNER", "Invalid QR: $result")
+                }
+            }
+        }
+    }
+
+    fun isValidDeepLink(deepLink: String): Boolean {
+        val regex = Regex("""^purrytify://song/\d+$""")
+        return regex.matches(deepLink)
     }
 
     private fun checkTokenValidity() {
@@ -214,5 +243,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    companion object {
+        private const val REQUEST_CODE_QR_SCAN = 101
     }
 }

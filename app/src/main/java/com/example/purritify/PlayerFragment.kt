@@ -331,10 +331,12 @@ class PlayerFragment : Fragment() {
                         findNavController().popBackStack()
                     }
                 } else {
-                    Log.e("PlayerFragment", "Error response: ${response.code()}")
+                    Toast.makeText(requireContext(), "Song not found", Toast.LENGTH_SHORT).show()
+
+                    findNavController().popBackStack()
                 }
             } catch (e: Exception) {
-                Log.e("PlayerFragment", "Failed to fetch song: $songId", e)
+                Toast.makeText(requireContext(), "Failed to fetch song: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }

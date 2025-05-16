@@ -63,4 +63,5 @@
     <string name="share">Share</string>
     <string name="share_via_link">Share via Link</string>
     <string name="share_via_qr_code">Share via QR Code</string>
+    <string name="scan_qr">Scan QR</string>
 </resources>

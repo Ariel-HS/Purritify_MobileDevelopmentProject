@@ -1,6 +1,10 @@
 package com.example.purritify
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -8,8 +12,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -28,6 +35,7 @@ import com.example.purritify.ui.login.TokenManager
 import com.example.purritify.ui.player.MiniplayerView
 import com.example.purritify.ui.player.PlayerViewModel
 import kotlinx.coroutines.launch
+import androidx.core.graphics.drawable.toDrawable
 
 class HomeFragment : Fragment() {
 
@@ -232,5 +240,62 @@ class HomeFragment : Fragment() {
             val action = HomeFragmentDirections.actionHomeToChart(chartType = "local")
             findNavController().navigate(action)
         }
+
+        // Hamburger
+        binding.homeToolbar.hamburgerButton.setOnClickListener { showHamburgerDropdown(it) }
+    }
+
+    @SuppressLint("InflateParams")
+    private fun showHamburgerDropdown(anchorView: View) {
+        val inflater = LayoutInflater.from(requireContext())
+        val dropdownView = inflater.inflate(R.layout.dropdown_menu, null)
+
+        val popupWindow = PopupWindow(
+            dropdownView,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true // focusable
+        )
+
+        popupWindow.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+        popupWindow.elevation = 8f
+
+        val scanQr = dropdownView.findViewById<TextView>(R.id.scanQr)
+        scanQr.setOnClickListener {
+            val activity = context as? Activity ?: return@setOnClickListener
+
+            handleQrScanner(activity, popupWindow)
+        }
+
+        popupWindow.showAsDropDown(anchorView)
+    }
+
+    private fun handleQrScanner(activity: Activity, popupWindow: PopupWindow) {
+        if (ContextCompat.checkSelfPermission(activity, android.Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            popupWindow.dismiss()
+
+            // Permission already granted
+            openQrScanner(activity)
+        } else {
+            // Request camera permission
+            ActivityCompat.requestPermissions(
+                activity,
+                arrayOf(android.Manifest.permission.CAMERA),
+                REQUEST_CODE_CAMERA_PERMISSION
+            )
+        }
+    }
+
+    private fun openQrScanner(activity: Activity) {
+        val intent = Intent(activity, com.journeyapps.barcodescanner.CaptureActivity::class.java)
+        intent.putExtra("SCAN_MODE", "QR_CODE_MODE")
+        activity.startActivityForResult(intent, REQUEST_CODE_QR_SCAN)
+    }
+
+    companion object {
+        private const val REQUEST_CODE_QR_SCAN = 101
+        const val REQUEST_CODE_CAMERA_PERMISSION = 1002
     }
 }
