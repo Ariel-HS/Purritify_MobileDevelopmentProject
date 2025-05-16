@@ -213,8 +213,7 @@ class PlayerFragment : Fragment() {
             val shareButton = binding.shareButton
 
             shareButton.visibility = View.VISIBLE
-            shareButton.setOnClickListener { currentSong?.let { Log.d("Share", "TEST")
-                ShareDialog(it.id).show(childFragmentManager, "ShareDialog") } }
+            shareButton.setOnClickListener { currentSong?.let { ShareDialog(it.id).show(childFragmentManager, "ShareDialog") } }
         }
 
         playerViewModel.isPaused.observe(viewLifecycleOwner) { animatePauseIcon(it, binding.playIcon, binding.pauseIcon) }

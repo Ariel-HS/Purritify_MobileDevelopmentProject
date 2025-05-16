@@ -94,6 +94,16 @@
                 android:layout_width="16dp"
                 android:layout_height="16dp"/>
 
+            <!-- Share Button -->
+            <ImageButton
+                android:id="@+id/shareButton"
+                android:contentDescription="@string/share"
+                android:src="@drawable/share"
+                android:background="@android:color/transparent"
+                android:visibility="gone"
+                android:layout_width="16dp"
+                android:layout_height="16dp"/>
+
             <!-- Pause / Play Button -->
             <FrameLayout
                 android:id="@+id/pausePlayContainer"

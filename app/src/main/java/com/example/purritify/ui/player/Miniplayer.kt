@@ -3,17 +3,15 @@ package com.example.purritify.ui.player
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.view.View
 import android.widget.FrameLayout
 import android.widget.SeekBar
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModelProvider
 import com.example.purritify.R
 import com.example.purritify.data.model.PlayableSong
 import com.example.purritify.data.room.Song
 import com.example.purritify.databinding.MiniplayerBinding
 import com.example.purritify.ui.library.SongViewModel
-import com.example.purritify.ui.library.SongViewModelFactory
 
 class MiniplayerView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyle: Int = 0
@@ -25,6 +23,8 @@ class MiniplayerView @JvmOverloads constructor(
         val inflater = LayoutInflater.from(context)
         binding = MiniplayerBinding.inflate(inflater, this, true)
     }
+
+    private var fragmentManager: FragmentManager? = null
 
     private var currentSong: PlayableSong? = null
 
@@ -39,7 +39,12 @@ class MiniplayerView @JvmOverloads constructor(
 
             // remove like button if it's an online song
             if (song is Song) {
-                binding.addButton.visibility = View.GONE
+                binding.addButton.visibility = GONE
+            } else {
+                val shareButton = binding.shareButton
+
+                shareButton.visibility = VISIBLE
+                shareButton.setOnClickListener { currentSong?.let { ShareDialog(it.id).show(fragmentManager!!, "ShareDialog") } }
             }
 
             visibility = VISIBLE
@@ -81,11 +86,13 @@ class MiniplayerView @JvmOverloads constructor(
         }
     }
 
-    fun activateMiniplayer(lifecycleOwner: LifecycleOwner, playerViewModel: PlayerViewModel, songViewModel: SongViewModel?, onClick: (PlayableSong) -> Unit) {
+    fun activateMiniplayer(lifecycleOwner: LifecycleOwner, playerViewModel: PlayerViewModel, songViewModel: SongViewModel?, fragmentManager: FragmentManager, onClick: (PlayableSong) -> Unit) {
         // Cache the ViewModel if it's not null
         if (songViewModel != null) {
             songViewModelCache = songViewModel
         }
+
+        this.fragmentManager = fragmentManager
 
         playerViewModel.currentSong.observe(lifecycleOwner) {
             bindSong(it)
@@ -95,13 +102,13 @@ class MiniplayerView @JvmOverloads constructor(
                 if (viewModelToUse != null) {
                     setOnLike(viewModelToUse, it, playerViewModel)
                     binding.addButton.setImageResource(if (it.liked) R.drawable.like else R.drawable.unlike)
-                    binding.addButton.visibility = View.VISIBLE
+                    binding.addButton.visibility = VISIBLE
                 } else {
                     // Should never be called, but ok
-                    binding.addButton.visibility = View.GONE
+                    binding.addButton.visibility = GONE
                 }
             } else {
-                binding.addButton.visibility = View.GONE
+                binding.addButton.visibility = GONE
             }
 
             // TODO check if have to nullify cache when playing online song

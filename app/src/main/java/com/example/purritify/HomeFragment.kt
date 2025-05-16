@@ -114,7 +114,7 @@ class HomeFragment : Fragment() {
 
         // Miniplayer logic
         val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
-        miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, songViewModel) {
+        miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, songViewModel, childFragmentManager) {
             val action = HomeFragmentDirections.actionHomeToPlayer(songId = it.id, fromMiniplayer = true)
             findNavController().navigate(action)
         }

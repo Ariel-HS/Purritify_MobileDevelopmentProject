@@ -87,7 +87,7 @@ class ChartFragment : Fragment(), ChartAdapter.ItemClickListener {
 
         // Miniplayer logic
         val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
-        miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, null) {
+        miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, null, childFragmentManager)  {
             val action = ChartFragmentDirections.actionChartToPlayer(songId = it.id, fromMiniplayer = true, mode = chartType)
             findNavController().navigate(action)
         }

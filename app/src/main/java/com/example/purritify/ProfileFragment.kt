@@ -142,7 +142,7 @@ class ProfileFragment : Fragment() {
 
         // Miniplayer logic
         val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
-        miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, songViewModel) {
+        miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, songViewModel, childFragmentManager) {
             val action = ProfileFragmentDirections.actionProfileToPlayer(songId = it.id, true)
             findNavController().navigate(action)
         }
