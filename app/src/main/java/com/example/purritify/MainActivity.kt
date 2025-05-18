@@ -79,13 +79,15 @@ class MainActivity : AppCompatActivity() {
                 else -> false
             }
         }
+
+        intent?.let { handleNotificationIntent(it) }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        handleNotificationIntent(intent)
 
         val navController = this.findNavController(R.id.fragment_container_view)
-
         handleIntent(navController)
     }
 
@@ -247,5 +249,21 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val REQUEST_CODE_QR_SCAN = 101
+    }
+
+    private fun handleNotificationIntent(intent: Intent) {
+        if (intent.getBooleanExtra("openPlayer", false)) {
+            val songId = intent.getIntExtra("songId", -1)
+            if (songId != -1) {
+                val navController = findNavController(R.id.fragment_container_view)
+                val action = MainNavDirections.actionGlobalPlayer(
+                    songId = songId,
+                    fromMiniplayer = false,
+                    // You may need to determine the appropriate mode here
+                    mode = "offline"
+                )
+                navController.navigate(action)
+            }
+        }
     }
 }
