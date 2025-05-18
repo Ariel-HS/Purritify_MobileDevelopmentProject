@@ -247,12 +247,11 @@ class PlayerFragment : Fragment() {
 
     private fun playSong() {
         Log.d("PlayerFragment", "PlaySong $currentSong")
-        playerViewModel.setCurrentSong(currentSong!!)
+        playerViewModel.setCurrentSong(currentSong!!, mode)
 
         val songViewModel: SongViewModel? = null
         Log.d("PlayerFragment", "URI: ${currentSong!!.pathFile.toUri()}")
         playerViewModel.playSong(currentSong!!.pathFile.toUri(), songViewModel)
-
     }
 
     private fun getNextSong(direction: Direction): PlayableSong? {
@@ -287,14 +286,13 @@ class PlayerFragment : Fragment() {
             // Refresh UI
             handleData()
 
-            playerViewModel.setCurrentSong(nextSong)
+            playerViewModel.setCurrentSong(nextSong, mode)
 
             if (mode == "offline") {
                 playerViewModel.playSong(nextSong.pathFile.toUri(), songViewModel)
             } else {
                 playerViewModel.playSong(nextSong.pathFile.toUri(), null)
             }
-
         }
     }
 

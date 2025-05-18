@@ -72,13 +72,33 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         LocalBroadcastManager.getInstance(context).registerReceiver(playbackActionReceiver, filter)
     }
 
-    fun setCurrentSong(song: PlayableSong) {
-        _currentSong.value = song
-        // Update notification with new song info
-        updateMediaService(song)
+    override fun onCleared() {
+        super.onCleared()
+        mediaPlayer?.release()
+        handler.removeCallbacks(updateRunnable)
+
+        try {
+            val context = getApplication<Application>()
+            LocalBroadcastManager.getInstance(context).unregisterReceiver(playbackActionReceiver)
+        } catch (e: Exception) {
+            Log.e("PlayerViewModel", "Error unregistering receiver: ${e.message}")
+        }
+
+        if (MediaPlayerService.isServiceRunning) {
+            val context = getApplication<Application>()
+            val intent = Intent(context, MediaPlayerService::class.java).apply {
+                action = MediaPlayerService.ACTION_STOP
+            }
+            context.startService(intent)
+        }
     }
 
-    private fun updateMediaService(song: PlayableSong) {
+    fun setCurrentSong(song: PlayableSong, mode: String = "offline") {
+        _currentSong.value = song
+        updateMediaService(song, mode)
+    }
+
+    private fun updateMediaService(song: PlayableSong, mode: String) {
         val context = getApplication<Application>()
         val intent = Intent(context, MediaPlayerService::class.java).apply {
             action = "UPDATE_SONG"
@@ -86,6 +106,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             putExtra("artist", song.artist)
             putExtra("artwork", song.pathArtwork)
             putExtra("id", song.id)
+            putExtra("songMode", mode)
         }
 
         context.startForegroundService(intent)
@@ -237,28 +258,5 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun seekTo(position: Int) {
         mediaPlayer?.seekTo(position)
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        mediaPlayer?.release()
-        handler.removeCallbacks(updateRunnable)
-
-        // Unregister broadcast receiver
-        try {
-            val context = getApplication<Application>()
-            LocalBroadcastManager.getInstance(context).unregisterReceiver(playbackActionReceiver)
-        } catch (e: Exception) {
-            Log.e("PlayerViewModel", "Error unregistering receiver: ${e.message}")
-        }
-
-        // Stop the service when the ViewModel is cleared
-        if (MediaPlayerService.isServiceRunning) {
-            val context = getApplication<Application>()
-            val intent = Intent(context, MediaPlayerService::class.java).apply {
-                action = MediaPlayerService.ACTION_STOP
-            }
-            context.startService(intent)
-        }
     }
 }

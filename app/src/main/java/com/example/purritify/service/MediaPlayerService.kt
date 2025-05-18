@@ -45,6 +45,9 @@ class MediaPlayerService : Service() {
         const val BROADCAST_PLAYBACK_STATE_CHANGED = "com.example.purritify.PLAYBACK_STATE_CHANGED"
         const val BROADCAST_CURRENT_SONG_CHANGED = "com.example.purritify.CURRENT_SONG_CHANGED"
 
+        // Action for app closed
+        const val ACTION_APP_CLOSED = "com.example.purritify.APP_CLOSED"
+
         // Flag to track service state
         var isServiceRunning = false
     }
@@ -53,12 +56,12 @@ class MediaPlayerService : Service() {
     private var currentSong: PlayableSong? = null
     private var isPlaying = false
     private var artworkBitmap: Bitmap? = null
+    private var currentSongMode: String = "offline"
 
     private val notificationActionReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
                 ACTION_PLAY_PAUSE -> {
-                    // Broadcast to PlayerViewModel
                     val playPauseIntent = Intent(BROADCAST_PLAYBACK_STATE_CHANGED)
                     LocalBroadcastManager.getInstance(this@MediaPlayerService)
                         .sendBroadcast(playPauseIntent)
@@ -73,7 +76,10 @@ class MediaPlayerService : Service() {
                     LocalBroadcastManager.getInstance(this@MediaPlayerService)
                         .sendBroadcast(prevIntent)
                 }
-                ACTION_STOP -> {
+                ACTION_STOP, ACTION_APP_CLOSED -> {
+                    val stopAppIntent = Intent("com.example.purritify.STOP_APP")
+                    LocalBroadcastManager.getInstance(this@MediaPlayerService)
+                        .sendBroadcast(stopAppIntent)
                     stopSelf()
                 }
             }
@@ -83,15 +89,14 @@ class MediaPlayerService : Service() {
     override fun onCreate() {
         super.onCreate()
 
-        // Create media session
         mediaSession = MediaSessionCompat(this, "PurrytifyMediaSession")
 
-        // Register receiver for notification actions
         val intentFilter = IntentFilter().apply {
             addAction(ACTION_PLAY_PAUSE)
             addAction(ACTION_NEXT)
             addAction(ACTION_PREVIOUS)
             addAction(ACTION_STOP)
+            addAction(ACTION_APP_CLOSED)
         }
 
         val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -114,11 +119,18 @@ class MediaPlayerService : Service() {
                 val songArtwork = intent.getStringExtra("artwork") ?: ""
                 val songId = intent.getIntExtra("id", -1)
 
+                currentSongMode = intent.getStringExtra("songMode") ?: "offline"
+
                 updateCurrentSong(songTitle, songArtist, songArtwork, songId)
             }
             "UPDATE_PLAYBACK_STATE" -> {
                 isPlaying = intent.getBooleanExtra("isPlaying", false)
                 updateNotification()
+            }
+            ACTION_APP_CLOSED -> {
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+                return START_NOT_STICKY
             }
         }
 
@@ -126,7 +138,6 @@ class MediaPlayerService : Service() {
     }
 
     private fun updateCurrentSong(title: String, artist: String, artwork: String, id: Int) {
-        // Create a simple PlayableSong object for the notification
         currentSong = object : PlayableSong {
             override val title: String = title
             override val artist: String = artist
@@ -136,7 +147,6 @@ class MediaPlayerService : Service() {
             override val id: Int = id
         }
 
-        // Load artwork for notification
         loadArtwork(artwork)
     }
 
@@ -194,6 +204,7 @@ class MediaPlayerService : Service() {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra("openPlayer", true)
             putExtra("songId", currentSong?.id ?: -1)
+            putExtra("songMode", currentSongMode)
         }
 
         val contentPendingIntent = PendingIntent.getActivity(
@@ -259,8 +270,17 @@ class MediaPlayerService : Service() {
             Log.e(TAG, "Error unregistering receiver: ${e.message}")
         }
 
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(NOTIFICATION_ID)
+
         mediaSession.release()
         isServiceRunning = false
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

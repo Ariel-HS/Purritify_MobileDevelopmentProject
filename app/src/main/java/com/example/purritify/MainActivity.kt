@@ -21,18 +21,27 @@ import com.example.purritify.databinding.ActivityMainBinding
 import com.example.purritify.network.NetworkConnectivityManager
 import com.example.purritify.network.NetworkStatusViewModel
 import com.example.purritify.service.TokenRefreshService
+import com.example.purritify.service.MediaPlayerService
 import com.example.purritify.ui.login.LoginActivity
 import com.example.purritify.ui.login.TokenManager
 import com.google.android.material.snackbar.Snackbar
 
-class MainActivity : AppCompatActivity() {
 
+class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     // Network connectivity components
     private lateinit var networkConnectivityManager: NetworkConnectivityManager
     private lateinit var networkStatusViewModel: NetworkStatusViewModel
     private var noInternetSnackbar: Snackbar? = null
+
+    private val stopAppReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == "com.example.purritify.STOP_APP") {
+                finish()
+            }
+        }
+    }
 
     fun getNetworkStatusViewModel(): NetworkStatusViewModel {
         return networkStatusViewModel
@@ -81,6 +90,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         intent?.let { handleNotificationIntent(it) }
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+            stopAppReceiver,
+            IntentFilter("com.example.purritify.STOP_APP")
+        )
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -95,12 +109,21 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         try {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(tokenRefreshFailedReceiver)
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(stopAppReceiver)
         } catch (_: IllegalArgumentException) {
             Log.w("MainActivity", "Token refresh receiver was not registered or already unregistered")
         }
 
         // Unregister network callback
         networkConnectivityManager.unregisterNetworkCallback()
+
+        // Stop media player service when app is destroyed
+        if (isFinishing) {
+            val intent = Intent(this, MediaPlayerService::class.java).apply {
+                action = MediaPlayerService.ACTION_APP_CLOSED
+            }
+            startService(intent)
+        }
     }
 
     private fun handleIntent(navController: NavController) {
@@ -256,11 +279,11 @@ class MainActivity : AppCompatActivity() {
             val songId = intent.getIntExtra("songId", -1)
             if (songId != -1) {
                 val navController = findNavController(R.id.fragment_container_view)
+                val songMode = intent.getStringExtra("songMode") ?: "offline"
                 val action = MainNavDirections.actionGlobalPlayer(
                     songId = songId,
                     fromMiniplayer = false,
-                    // You may need to determine the appropriate mode here
-                    mode = "offline"
+                    mode = songMode
                 )
                 navController.navigate(action)
             }
