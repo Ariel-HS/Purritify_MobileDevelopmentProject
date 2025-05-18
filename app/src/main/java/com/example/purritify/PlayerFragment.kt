@@ -1,5 +1,9 @@
 package com.example.purritify
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -24,9 +28,11 @@ import com.example.purritify.ui.player.PlayerViewModel
 import kotlinx.coroutines.launch
 import java.util.Locale
 import androidx.core.net.toUri
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.navArgs
 import com.example.purritify.data.model.PlayableSong
 import com.example.purritify.retrofit.RetrofitClient
+import com.example.purritify.service.MediaPlayerService
 import com.example.purritify.ui.login.TokenManager
 import com.example.purritify.ui.player.ShareDialog
 import com.example.purritify.ui.player.animatePauseIcon
@@ -124,6 +130,8 @@ class PlayerFragment : Fragment() {
                     songList = songs
                     currentSong = songs.firstOrNull { it.id == songId }
 
+                    playerViewModel.setPlaylist(songs, songId)
+
                     if (currentSong == null) {
                         Log.d("PlayerFragment", "No song found with id $songId, going back to home page")
                         findNavController().popBackStack()
@@ -165,6 +173,7 @@ class PlayerFragment : Fragment() {
 
                     songList = response
                     Log.d("PlayerFragment", "$songList")
+                    playerViewModel.setPlaylist(songList, songId)
                     currentSong = songList.firstOrNull { it.id == songId }
 
                     if (currentSong == null) {
@@ -217,6 +226,21 @@ class PlayerFragment : Fragment() {
         }
 
         playerViewModel.isPaused.observe(viewLifecycleOwner) { animatePauseIcon(it, binding.playIcon, binding.pauseIcon) }
+
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
+            songChangeReceiver,
+            IntentFilter(MediaPlayerService.BROADCAST_CURRENT_SONG_CHANGED)
+        )
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+
+        try {
+            LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(songChangeReceiver)
+        } catch (e: Exception) {
+            Log.e("PlayerFragment", "Error unregistering song change receiver", e)
+        }
     }
 
     // ---------------------------------------------------------------- Handle Song Playing ----------------------------------------------------------------------------------
@@ -322,6 +346,9 @@ class PlayerFragment : Fragment() {
 
                         currentSong = chartSong
 
+                        songList = listOf(chartSong)
+                        playerViewModel.setPlaylist(songList, songId)
+
                         // Update UI
                         handleData()
                         handlePlaybackState()
@@ -341,5 +368,24 @@ class PlayerFragment : Fragment() {
         }
     }
 
+    // ------------------------------ Notification Controls ------------------------------
+
+    private val songChangeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == MediaPlayerService.BROADCAST_CURRENT_SONG_CHANGED) {
+                val newSongId = intent.getIntExtra("songId", -1)
+                if (newSongId != -1 && newSongId != songId) {
+                    songId = newSongId
+                    currentSong = songList.firstOrNull { it.id == songId }
+                    if (currentSong != null) {
+                        handleData()
+                        if (mode == "offline" && currentSong is Song) {
+                            setupLikeButton()
+                        }
+                    }
+                }
+            }
+        }
+    }
 
 }

@@ -19,6 +19,7 @@ import com.example.purritify.data.model.PlayableSong
 import com.example.purritify.data.room.Song
 import com.example.purritify.service.MediaPlayerService
 import com.example.purritify.ui.library.SongViewModel
+import androidx.core.net.toUri
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -37,6 +38,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _currentTime = MutableLiveData(0)
     val currentTime: LiveData<Int> get() = _currentTime
 
+    private var currentPlaylist: List<PlayableSong> = emptyList()
+    private var currentPlaylistIndex: Int = -1
+
     private val updateRunnable = object : Runnable {
         override fun run() {
             mediaPlayer?.let {
@@ -51,14 +55,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
                 MediaPlayerService.BROADCAST_PLAYBACK_STATE_CHANGED -> togglePause()
-                MediaPlayerService.ACTION_NEXT -> {
-                    // Handle next action - This would need to be implemented
-                    // based on how your app handles song switching
-                }
-                MediaPlayerService.ACTION_PREVIOUS -> {
-                    // Handle previous action - This would need to be implemented
-                    // based on how your app handles song switching
-                }
+                MediaPlayerService.ACTION_NEXT -> playNextSong()
+                MediaPlayerService.ACTION_PREVIOUS -> playPreviousSong()
             }
         }
     }
@@ -100,6 +98,11 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             putExtra("isPlaying", !(_isPaused.value ?: true))
         }
         context.startService(intent)
+    }
+
+    fun setPlaylist(songs: List<PlayableSong>, currentSongId: Int) {
+        currentPlaylist = songs
+        currentPlaylistIndex = songs.indexOfFirst { it.id == currentSongId }
     }
 
     fun isPlaying(): Boolean {
@@ -182,6 +185,54 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             }
             updatePlaybackState()
         }
+    }
+
+    fun playNextSong() {
+        if (currentPlaylist.isEmpty() || currentPlaylistIndex == -1) return
+
+        if (currentPlaylistIndex + 1 < currentPlaylist.size) {
+            currentPlaylistIndex++
+            val nextSong = currentPlaylist[currentPlaylistIndex]
+            setCurrentSong(nextSong)
+
+            // Get URI based on the song type
+            val uri = if (nextSong.pathFile.startsWith("http")) {
+                nextSong.pathFile.toUri()
+            } else {
+                nextSong.pathFile.toUri()
+            }
+
+            playSong(uri, null)
+
+            // Broadcast that song has changed so PlayerFragment can update if visible
+            val context = getApplication<Application>()
+            val songChangedIntent = Intent(MediaPlayerService.BROADCAST_CURRENT_SONG_CHANGED)
+            songChangedIntent.putExtra("songId", nextSong.id)
+            LocalBroadcastManager.getInstance(context).sendBroadcast(songChangedIntent)
+        }
+    }
+
+    fun playPreviousSong() {
+        if (currentPlaylist.isEmpty() || currentPlaylistIndex <= 0) return
+
+        currentPlaylistIndex--
+        val prevSong = currentPlaylist[currentPlaylistIndex]
+        setCurrentSong(prevSong)
+
+        // Get URI based on the song type
+        val uri = if (prevSong.pathFile.startsWith("http")) {
+            prevSong.pathFile.toUri()
+        } else {
+            prevSong.pathFile.toUri()
+        }
+
+        playSong(uri, null)
+
+        // Broadcast that song has changed so PlayerFragment can update if visible
+        val context = getApplication<Application>()
+        val songChangedIntent = Intent(MediaPlayerService.BROADCAST_CURRENT_SONG_CHANGED)
+        songChangedIntent.putExtra("songId", prevSong.id)
+        LocalBroadcastManager.getInstance(context).sendBroadcast(songChangedIntent)
     }
 
     fun seekTo(position: Int) {
