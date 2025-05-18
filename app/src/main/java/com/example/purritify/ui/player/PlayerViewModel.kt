@@ -45,6 +45,15 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         override fun run() {
             mediaPlayer?.let {
                 _currentTime.value = it.currentPosition
+
+                // Send progress update to service
+                val intent = Intent(getApplication(), MediaPlayerService::class.java).apply {
+                    action = "UPDATE_PROGRESS"
+                    putExtra("currentPosition", it.currentPosition)
+                    putExtra("duration", it.duration)
+                }
+                getApplication<Application>().startService(intent)
+
                 handler.postDelayed(this, 500)
             }
         }

@@ -12,8 +12,12 @@ import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
+import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -27,6 +31,7 @@ import com.bumptech.glide.request.transition.Transition
 import com.example.purritify.MainActivity
 import com.example.purritify.R
 import com.example.purritify.data.model.PlayableSong
+import java.util.Locale
 
 class MediaPlayerService : Service() {
     private val TAG = "MediaPlayerService"
@@ -86,6 +91,21 @@ class MediaPlayerService : Service() {
         }
     }
 
+    private var currentPosition = 0
+    private var duration = 0
+    private val updateIntervalMs = 1000L // Update progress every second
+    private val handler = Handler(Looper.getMainLooper())
+
+    private val updateProgressRunnable = object : Runnable {
+        override fun run() {
+            updateNotification()
+
+            if (isPlaying) {
+                handler.postDelayed(this, updateIntervalMs)
+            }
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
 
@@ -125,6 +145,19 @@ class MediaPlayerService : Service() {
             }
             "UPDATE_PLAYBACK_STATE" -> {
                 isPlaying = intent.getBooleanExtra("isPlaying", false)
+
+                if (isPlaying) {
+                    handler.removeCallbacks(updateProgressRunnable)
+                    handler.post(updateProgressRunnable)
+                } else {
+                    handler.removeCallbacks(updateProgressRunnable)
+                }
+
+                updateNotification()
+            }
+            "UPDATE_PROGRESS" -> {
+                currentPosition = intent.getIntExtra("currentPosition", 0)
+                duration = intent.getIntExtra("duration", 0)
                 updateNotification()
             }
             ACTION_APP_CLOSED -> {
@@ -237,7 +270,34 @@ class MediaPlayerService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Determine play/pause icon
+        val currentTimeFormatted = formatTime(currentPosition)
+        val durationFormatted = formatTime(duration)
+
+        val mediaMetadata = MediaMetadataCompat.Builder()
+            .putString(MediaMetadataCompat.METADATA_KEY_TITLE, currentSong?.title)
+            .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, currentSong?.artist)
+            .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, artworkBitmap)
+            .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration.toLong())
+            .build()
+
+        mediaSession.setMetadata(mediaMetadata)
+
+        // Update playback state with progress
+        val stateBuilder = PlaybackStateCompat.Builder()
+            .setState(
+                if (isPlaying) PlaybackStateCompat.STATE_PLAYING else PlaybackStateCompat.STATE_PAUSED,
+                currentPosition.toLong(),
+                1.0f
+            )
+            .setActions(
+                PlaybackStateCompat.ACTION_PLAY or
+                        PlaybackStateCompat.ACTION_PAUSE or
+                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+            )
+
+        mediaSession.setPlaybackState(stateBuilder.build())
+
         val playPauseIcon = if (isPlaying) R.drawable.pause else R.drawable.play
 
         // Build the notification
@@ -257,6 +317,7 @@ class MediaPlayerService : Service() {
                     .setMediaSession(mediaSession.sessionToken)
                     .setShowActionsInCompactView(0, 1, 2) // Previous, Play/Pause, Next
             )
+            .setSubText("$currentTimeFormatted / $durationFormatted")
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOnlyAlertOnce(true)
             .build()
@@ -264,6 +325,9 @@ class MediaPlayerService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+
+        handler.removeCallbacks(updateProgressRunnable)
+
         try {
             unregisterReceiver(notificationActionReceiver)
         } catch (e: Exception) {
@@ -284,4 +348,11 @@ class MediaPlayerService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    private fun formatTime(timeMs: Int): String {
+        val totalSeconds = timeMs / 1000
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        return String.format(Locale.US, "%d:%02d", minutes, seconds)
+    }
 }
