@@ -64,4 +64,19 @@
     <string name="share_via_link">Share via Link</string>
     <string name="share_via_qr_code">Share via QR Code</string>
     <string name="scan_qr">Scan QR</string>
+    <string name="select_audio_device">Select Audio Output</string>
+    <string name="no_audio_devices_found">No audio devices found</string>
+    <string name="audio_device_icon">Audio device icon</string>
+    <string name="audio_device_status_connected">Connected</string>
+    <string name="audio_device_status_disconnected">Disconnected</string>
+    <string name="device_connection_lost">Connection to audio device lost</string>
+    <string name="device_connection_failed">Failed to connect to audio device</string>
+    <string name="using_internal_speaker">Now using internal speaker</string>
+    <string name="select_output_device">Select Output Device</string>
+    <string name="bluetooth_headset">Bluetooth Headset</string>
+    <string name="wired_headset">Wired Headset</string>
+    <string name="bluetooth_speaker">Bluetooth Speaker</string>
+    <string name="phone_speaker">Phone Speaker</string>
+    <string name="bluetooth_permission_needed">Bluetooth permissions needed</string>
+    <string name="bluetooth_permissions_required">Bluetooth permissions required to access this device</string>
 </resources>

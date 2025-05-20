@@ -1,9 +1,11 @@
 package com.example.purritify
 
+import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -11,8 +13,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.purritify.databinding.FragmentPlayerBinding
@@ -38,6 +43,11 @@ import com.example.purritify.ui.player.ShareDialog
 import com.example.purritify.ui.player.animatePauseIcon
 import com.example.purritify.ui.player.handleCover
 import com.example.purritify.ui.player.handleLike
+import com.example.purritify.audio.AudioDevice
+import com.example.purritify.audio.AudioDeviceManager
+import com.example.purritify.audio.AudioDeviceDialog
+import com.example.purritify.audio.AudioDeviceType
+import com.google.android.material.snackbar.Snackbar
 
 enum class Direction {
     NEXT, PREVIOUS
@@ -63,6 +73,25 @@ class PlayerFragment : Fragment() {
     private lateinit var songViewModel: SongViewModel
 
     private lateinit var songDatabase: SongDatabase
+
+    private lateinit var audioDeviceManager: AudioDeviceManager
+    private var audioOutputButton: ImageButton? = null
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.entries.all { it.value }
+
+        if (allGranted) {
+            audioDeviceManager.refreshAudioDevices()
+        } else {
+            Snackbar.make(
+                binding.root,
+                R.string.bluetooth_permissions_required,
+                Snackbar.LENGTH_LONG
+            ).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -105,6 +134,8 @@ class PlayerFragment : Fragment() {
                 SongViewModelFactory(songDatabase.songDao, userEmail!!)
             )[SongViewModel::class.java]
         }
+
+        audioDeviceManager = AudioDeviceManager(requireContext())
     }
 
     override fun onCreateView(
@@ -114,11 +145,44 @@ class PlayerFragment : Fragment() {
     ): View {
         binding = FragmentPlayerBinding.inflate(inflater, container, false)
 
+        audioOutputButton = ImageButton(requireContext()).apply {
+            id = View.generateViewId()
+            layoutParams = ViewGroup.LayoutParams(
+                resources.getDimensionPixelSize(R.dimen.player_button_size),
+                resources.getDimensionPixelSize(R.dimen.player_button_size)
+            )
+            background = ContextCompat.getDrawable(requireContext(), android.R.color.transparent)
+            setImageResource(R.drawable.audio_output)
+            contentDescription = getString(R.string.select_output_device)
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            setPadding(8, 8, 8, 8)
+        }
+
+        val buttonContainer = binding.buttonContainer
+
+        val moreButton = binding.moreButton
+
+        val layoutParams = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        layoutParams.endToStart = moreButton.id
+        layoutParams.topToTop = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
+        layoutParams.bottomToBottom = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
+        layoutParams.marginEnd = resources.getDimensionPixelSize(R.dimen.view_margin)
+
+        audioOutputButton?.layoutParams = layoutParams
+        buttonContainer.addView(audioOutputButton)
+
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Request Bluetooth permissions
+        checkBluetoothPermissions()
 
         // Handle close button
         binding.closeButton.setOnClickListener { findNavController().popBackStack() }
@@ -231,10 +295,31 @@ class PlayerFragment : Fragment() {
             songChangeReceiver,
             IntentFilter(MediaPlayerService.BROADCAST_CURRENT_SONG_CHANGED)
         )
+
+        audioOutputButton?.setOnClickListener {
+            if (hasBluetoothPermissions() || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                showAudioDeviceDialog()
+            } else {
+                requestBluetoothPermissions()
+            }
+        }
+
+        audioDeviceManager.activeDevice.observe(viewLifecycleOwner) { device ->
+            updateAudioOutputIndicator(device)
+        }
+
+        audioDeviceManager.deviceConnectionError.observe(viewLifecycleOwner) { errorMessage ->
+            errorMessage?.let {
+                Snackbar.make(binding.root, it, Snackbar.LENGTH_LONG).show()
+                audioDeviceManager.clearConnectionError()
+            }
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+
+        audioDeviceManager.cleanup()
 
         try {
             LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(songChangeReceiver)
@@ -383,6 +468,56 @@ class PlayerFragment : Fragment() {
                     }
                 }
             }
+        }
+    }
+
+    // ------------------------------ Audio Routing ------------------------------
+
+    private fun showAudioDeviceDialog() {
+        AudioDeviceDialog(audioDeviceManager) { device ->
+            // Handle device selection
+            Toast.makeText(
+                requireContext(),
+                "Audio output switched to ${device.name}",
+                Toast.LENGTH_SHORT
+            ).show()
+        }.show(childFragmentManager, "AudioDeviceDialog")
+    }
+
+    private fun updateAudioOutputIndicator(device: AudioDevice?) {
+        device?.let {
+            val tintColor = if (device.type != AudioDeviceType.INTERNAL_SPEAKER) {
+                ContextCompat.getColor(requireContext(), android.R.color.darker_gray)
+            } else {
+                ContextCompat.getColor(requireContext(), android.R.color.white)
+            }
+            audioOutputButton?.setColorFilter(tintColor)
+        }
+    }
+
+    private fun checkBluetoothPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!hasBluetoothPermissions()) {
+                requestBluetoothPermissions()
+            }
+        }
+    }
+
+    private fun hasBluetoothPermissions(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            return ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+        return true
+    }
+
+    private fun requestBluetoothPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            requestPermissionLauncher.launch(
+                arrayOf(Manifest.permission.BLUETOOTH_CONNECT)
+            )
         }
     }
 
