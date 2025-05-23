@@ -79,4 +79,6 @@
     <string name="phone_speaker">Phone Speaker</string>
     <string name="bluetooth_permission_needed">Bluetooth permissions needed</string>
     <string name="bluetooth_permissions_required">Bluetooth permissions required to access this device</string>
+    <string name="recommended_for_you">Recommended For You</string>
+    <string name="recommendation_scroll_view">Recommended songs scroll view</string>
 </resources>
