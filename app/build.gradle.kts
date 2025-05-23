@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.play.services.location)
     implementation("androidx.media:media:1.7.0")
+    implementation("org.osmdroid:osmdroid-android:6.1.16")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

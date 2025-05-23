@@ -16,8 +16,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import androidx.fragment.app.DialogFragment
+import com.example.purritify.OSMActivity
 import com.example.purritify.databinding.DialogEditProfileBinding
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -41,10 +41,31 @@ class EditProfileDialog(
         binding.uploadPhotoButton.setImageURI(uri)
     }
 
-    private var selectedLocation: String? = null
-
     private var currentLocation: String? = null
 
+    private var detectedLocation: String? = null
+
+    private var countryCodes = Locale.getISOCountries().toSet()
+
+    // Launch OSM Intent
+    private val locationPicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (it.resultCode == Activity.RESULT_OK && it.data != null) {
+            val latitude = it.data!!.getDoubleExtra("latitude", 0.0)
+            val longitude = it.data!!.getDoubleExtra("longitude", 0.0)
+
+            val selectedLocation = Location("manual")
+            selectedLocation.latitude = latitude
+            selectedLocation.longitude = longitude
+
+            val selectedCountryCode = getCountryCodeFromLocation(selectedLocation)
+
+            if (selectedCountryCode != null) binding.titleInput.setText(selectedCountryCode)
+            else
+                Toast.makeText(requireContext(), "Failed to get country code from location", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Ask for location permission
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -55,16 +76,6 @@ class EditProfileDialog(
         }
     }
 
-    @SuppressLint("MemberExtensionConflict")
-    private val locationPickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val locationUri = result.data?.data
-            locationUri?.let {
-                selectedLocation = it.toString()
-                binding.titleInput.setText(selectedLocation)
-            }
-        }
-    }
 
     @SuppressLint("MemberExtensionConflict")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -82,13 +93,33 @@ class EditProfileDialog(
         // Profile Photo
         binding.uploadPhotoButton.setOnClickListener { imagePickerLauncher.launch("image/*") }
 
-        // Location Button
+        // Manual Location Button
         binding.locationButton.setOnClickListener {
-            openGoogleMaps()
+            openMap()
+        }
+
+        // Auto Location Button
+        binding.autoLocationButton.setOnClickListener {
+            if (detectedLocation.isNullOrBlank()) getCurrentLocation()
+
+            detectedLocation?.let {
+                binding.titleInput.setText(it)
+            } ?: run {
+                Toast.makeText(requireContext(), "Failed to fetch location", Toast.LENGTH_SHORT).show()
+            }
         }
 
         binding.btnSave.setOnClickListener {
-            val newLocation: String? = binding.titleInput.text?.toString()?.uppercase().takeUnless { it.isNullOrBlank() }
+            // Validate location
+            val locationInput = binding.titleInput.text?.toString()
+
+            if (!locationInput.isNullOrBlank() && !isValidLocation(locationInput)) {
+                Toast.makeText(requireContext(), "Invalid country code $locationInput", Toast.LENGTH_SHORT).show()
+
+                return@setOnClickListener
+            }
+
+            val newLocation: String? = locationInput.takeUnless { it.isNullOrBlank() }
 
             val newProfilePhoto: MultipartBody.Part? = selectedImageUri?.let {
                 createImagePartFromUri(requireContext(), it)
@@ -136,6 +167,7 @@ class EditProfileDialog(
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
+
     private fun getCurrentLocation() {
         if (ContextCompat.checkSelfPermission(
                 requireContext(),
@@ -147,7 +179,7 @@ class EditProfileDialog(
                     if (location != null) {
                         currentLocation = getCountryCodeFromLocation(location)
 
-                        binding.titleInput.setText(currentLocation)
+                        detectedLocation = currentLocation
                     } else {
                         Log.d("Location", "Location is null")
                     }
@@ -160,12 +192,17 @@ class EditProfileDialog(
         }
     }
 
-    // Select location manually
-    private fun openGoogleMaps() {
-        val uri = "geo:0,0?q=locate+me".toUri()
-        val intent = Intent(Intent.ACTION_VIEW, uri)
+    // Validate location
+    @SuppressLint("MemberExtensionConflict")
+    private fun isValidLocation(string: String): Boolean {
+        if (!string.matches(Regex("^[A-Z]{2}$"))) return false
 
-        intent.setPackage("com.google.android.apps.maps")
-        locationPickerLauncher.launch(intent)
+        return countryCodes.contains(string)
+    }
+
+    // Select location manually
+    private fun openMap() {
+        val intent = Intent(requireContext(), OSMActivity::class.java)
+        locationPicker.launch(intent)
     }
 }

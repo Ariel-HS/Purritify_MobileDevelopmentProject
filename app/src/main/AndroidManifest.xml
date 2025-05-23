@@ -78,6 +78,10 @@
 <!--                <category android:name="android.intent.category.LAUNCHER" />-->
 <!--            </intent-filter>-->
         </activity>
+        <activity
+            android:name=".OSMActivity"
+            android:theme="@style/Theme.Purritify">
+        </activity>
         <service
             android:name=".service.TokenRefreshService"
             android:enabled="true"

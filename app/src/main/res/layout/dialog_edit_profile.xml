@@ -87,13 +87,14 @@
             <ImageButton
                 android:id="@+id/locationButton"
                 android:layout_width="wrap_content"
-                android:layout_height="22dp"
-                android:contentDescription="@string/location"
+                android:layout_height="28dp"
+                android:contentDescription="@string/pick_location"
                 android:background="@android:color/transparent"
-                app:srcCompat="@drawable/location"
+                app:srcCompat="@drawable/crosshair"
                 android:scaleType="fitCenter"
                 android:adjustViewBounds="true"
                 android:layout_gravity="center_vertical"
+                android:layout_marginEnd="8dp"
                 />
 
             <com.google.android.material.textfield.TextInputLayout
@@ -101,7 +102,7 @@
                 android:layout_width="220dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="-2.25dp"
-                android:layout_marginStart="8dp"
+                android:layout_marginHorizontal="4dp"
                 android:hint="@string/country_code_e_g_id"
                 android:layout_gravity="center_vertical"
                 app:boxBackgroundColor="#303030"
@@ -116,6 +117,19 @@
                     android:textColor="@color/white" />
 
             </com.google.android.material.textfield.TextInputLayout>
+
+            <ImageButton
+                android:id="@+id/autoLocationButton"
+                android:layout_width="wrap_content"
+                android:layout_height="22dp"
+                android:contentDescription="@string/location"
+                android:background="@android:color/transparent"
+                app:srcCompat="@drawable/location"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="8dp"
+                />
 
         </LinearLayout>
 
