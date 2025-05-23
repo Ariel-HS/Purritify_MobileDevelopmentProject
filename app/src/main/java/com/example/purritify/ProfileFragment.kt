@@ -42,9 +42,18 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Locale
 import androidx.core.graphics.toColorInt
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.purritify.data.room.MonthlyStat
+import com.example.purritify.data.room.StreakStat
+import com.example.purritify.data.room.UserStat
 import com.example.purritify.ui.profile.EditProfileDialog
+import com.example.purritify.ui.profile.SoundCapsuleAdapter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.time.ZoneId
+import java.util.Date
 
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
@@ -59,6 +68,9 @@ class ProfileFragment : Fragment() {
     private var listened: Int = 0
 
     private lateinit var location: String
+
+    private lateinit var soundCapsuleAdapter: SoundCapsuleAdapter
+    private var timeListened: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -140,11 +152,23 @@ class ProfileFragment : Fragment() {
             loadStatistics()
         }
 
+        // Sound Capsule
+
         // Miniplayer logic
         val miniPlayer = view.findViewById<MiniplayerView>(R.id.miniPlayer)
         miniPlayer.activateMiniplayer(viewLifecycleOwner, playerViewModel, songViewModel, childFragmentManager) {
             val action = ProfileFragmentDirections.actionProfileToPlayer(songId = it.id, true)
             findNavController().navigate(action)
+        }
+
+        setupRecyclerView()
+
+        // observe playerViewModel for time update
+        playerViewModel.notifyUpdate.observe(viewLifecycleOwner) {
+            lifecycleScope.launch {
+                val monthlyStats = getSoundCapsuleData()
+                soundCapsuleAdapter.setStats(monthlyStats)
+            }
         }
     }
 
@@ -247,7 +271,7 @@ class ProfileFragment : Fragment() {
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
             params.gravity = Gravity.TOP
-            binding.root.addView(offlineMessage, params)
+            binding.mainContainer.addView(offlineMessage, params)
         }
 
         // Observe network status
@@ -290,6 +314,85 @@ class ProfileFragment : Fragment() {
                     }
                 ).show(childFragmentManager, "EditProfileDialog")
             }
+        }
+    }
+
+    private suspend fun getSoundCapsuleData(): List<MonthlyStat> = withContext(Dispatchers.IO) {
+        val userEmail = TokenManager.getInstance(requireContext()).getUserEmail()
+
+        if (userEmail.isNullOrEmpty()) {
+            requireActivity().runOnUiThread {
+                Toast.makeText(requireContext(), "Invalid user email access", Toast.LENGTH_SHORT).show()
+                Log.d("ProfileFragment", "Access while not logged in")
+            }
+            return@withContext emptyList()
+        }
+
+        val songDao = songDatabase.songDao
+        val months = songDao.getMonths(userEmail)
+
+        val monthlyStats: MutableList<MonthlyStat> = mutableListOf()
+        val streakData = songDao.getStreakData(userEmail)
+
+        val now = Date().toInstant().atZone(ZoneId.systemDefault())
+        var streakSong: StreakStat? = null
+
+        // process streak Data, just check songs with last played
+        // equal this month, get maximum
+        for (streakDatum in streakData) {
+            val date = streakDatum.streakEnd.toInstant().atZone(ZoneId.systemDefault())
+
+            val month = date.monthValue
+            val year = date.year
+
+            if (month != now.monthValue || year != now.year) continue
+
+            // streakLength should be >= 2 from dao
+            if (streakSong == null) {
+                streakSong = streakDatum
+                continue
+            }
+
+            if (streakDatum.streakLength >= streakSong.streakLength) {
+                streakSong = streakDatum
+            }
+        }
+
+        for (month in months) {
+            val userStat = songDao.getTimeListenedByMonth(userEmail, month)
+            val songStat = songDao.getTopSongByMonth(userEmail, month)
+            val artistStat = songDao.getTopArtistByMonth(userEmail, month)
+            var streakStat: StreakStat? = null
+
+            // check month
+            val split = month.split("-")
+            val monthStr = split[0]
+            if (monthStr.toInt() == now.monthValue) streakStat = streakSong
+
+            val newStat = MonthlyStat(
+                month,
+                userStat,
+                songStat.first(),
+                artistStat.first(),
+                streakStat
+            )
+
+            monthlyStats.add(newStat)
+        }
+
+        return@withContext monthlyStats.toList()
+    }
+
+    private fun setupRecyclerView() {
+        soundCapsuleAdapter = SoundCapsuleAdapter()
+        binding.soundCapsuleRecyclerView.apply {
+            adapter = soundCapsuleAdapter
+            layoutManager = LinearLayoutManager(requireContext())
+        }
+
+        lifecycleScope.launch {
+            val monthlyStats = getSoundCapsuleData()
+            soundCapsuleAdapter.setStats(monthlyStats)
         }
     }
 }

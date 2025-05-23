@@ -51,7 +51,7 @@ class ChartAdapter(
                 val db = SongDatabase.getInstance(context)
                 val songDao = db.songDao
 
-                // TODO check and block (VISIBLE.GONE) download button if already downloaded
+                // Check and block download button if already downloaded
                 CoroutineScope(Dispatchers.IO).launch {
                     val isDownloaded = songDao.isSongExistByTitle(song.title)
                     withContext(Dispatchers.Main) {

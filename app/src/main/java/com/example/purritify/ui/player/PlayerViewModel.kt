@@ -20,6 +20,15 @@ import com.example.purritify.data.room.Song
 import com.example.purritify.service.MediaPlayerService
 import com.example.purritify.ui.library.SongViewModel
 import androidx.core.net.toUri
+import androidx.lifecycle.viewModelScope
+import com.example.purritify.data.room.SongDatabase
+import com.example.purritify.data.room.SongHistory
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.time.temporal.ChronoUnit
+import java.util.Date
+import java.util.Locale
+import kotlin.coroutines.coroutineContext
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -38,13 +47,25 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _currentTime = MutableLiveData(0)
     val currentTime: LiveData<Int> get() = _currentTime
 
+    private var currentAddedTime: Long = 0
+    private var lastUpdateTime: Long = System.currentTimeMillis()
+    private val _notifyUpdate = MutableLiveData<Unit>()
+    val notifyUpdate: LiveData<Unit> get() = _notifyUpdate
+
     private var currentPlaylist: List<PlayableSong> = emptyList()
     private var currentPlaylistIndex: Int = -1
+    private var currentMode: String = "offline"
 
     private val updateRunnable = object : Runnable {
         override fun run() {
             mediaPlayer?.let {
                 _currentTime.value = it.currentPosition
+
+                // Update added time
+                val now = System.currentTimeMillis()
+                val delta = now - lastUpdateTime
+                currentAddedTime += delta.toInt()
+                lastUpdateTime = now
 
                 // Send progress update to service
                 val intent = Intent(getApplication(), MediaPlayerService::class.java).apply {
@@ -55,6 +76,15 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 getApplication<Application>().startService(intent)
 
                 handler.postDelayed(this, 500)
+
+                if (currentAddedTime >= 60_000) { // full minute has passed
+                    //notify to update recycler view
+
+                    val song = currentSong.value
+                    if (song != null) updateTimeOnDatabase(song.id)
+
+                    currentAddedTime = 0
+                }
             }
         }
     }
@@ -62,6 +92,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     // Broadcast receiver for notification actions
     private val playbackActionReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
+            val song = currentSong.value
+            if (song != null && currentMode == "offline") updateTimeOnDatabase(song.id)
+
             when (intent?.action) {
                 MediaPlayerService.BROADCAST_PLAYBACK_STATE_CHANGED -> togglePause()
                 MediaPlayerService.ACTION_NEXT -> playNextSong()
@@ -83,6 +116,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     override fun onCleared() {
         super.onCleared()
+
+        val song = currentSong.value
+        if (song != null && currentMode == "offline") updateTimeOnDatabase(song.id)
+
         mediaPlayer?.release()
         handler.removeCallbacks(updateRunnable)
 
@@ -104,7 +141,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun setCurrentSong(song: PlayableSong, mode: String = "offline") {
         _currentSong.value = song
+        currentMode = mode
         updateMediaService(song, mode)
+
+        if (mode == "offline") {
+            checkUpdateMonthAndStreak(song.id)
+        }
     }
 
     private fun updateMediaService(song: PlayableSong, mode: String) {
@@ -199,8 +241,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             return
         }
 
-        currentSong.value?.let {
-            if (it is Song) handleLastPlayedUpdate(it, songViewModel, this)
+        currentSong.value?.let { song ->
+            // should be fine
+            handleLastPlayedUpdate(song as Song, songViewModel, this)
         }
     }
 
@@ -267,5 +310,81 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun seekTo(position: Int) {
         mediaPlayer?.seekTo(position)
+    }
+
+    private fun updateTimeOnDatabase(songId: Int) {
+        val time = currentAddedTime/1000L
+        val context = getApplication<Application>()
+        val db = SongDatabase.getInstance(context)
+        val songDao = db.songDao
+
+        viewModelScope.launch {
+            songDao.addTimeListenedById(songId, time)
+
+            _notifyUpdate.value = Unit
+        }
+
+        currentAddedTime = 0
+    }
+
+    private fun checkUpdateMonthAndStreak(songId: Int) {
+        val context = getApplication<Application>()
+        val db = SongDatabase.getInstance(context)
+        val songDao = db.songDao
+
+        viewModelScope.launch {
+            // get latest songHistory (this saves streakStart) (this took way too much effort :'/ )
+            val listSongHistory: List<SongHistory> = songDao.getSongHistory(songId)
+
+            val formatter = SimpleDateFormat("MM-yyyy", Locale.US)
+            val now = formatter.format(Date())
+            val nowInstant = Date().toInstant()
+
+            var latestHistory = listSongHistory
+                .mapNotNull { songHistory ->
+                    formatter.parse(songHistory.month)?.let { date -> songHistory to date }
+                }
+                .maxByOrNull { it.second }
+                ?.first
+
+            if (latestHistory == null) {
+                return@launch
+            }
+
+            if (latestHistory.month != now) {
+                val newHistory = latestHistory.copy(
+                    month = now
+                )
+                songDao.insertSongHistory(newHistory)
+
+                // update latestHHistory
+                latestHistory = newHistory
+            }
+
+            // update streak
+            if (latestHistory.lastPlayed == null) {
+                // update
+                val newHistory = latestHistory.copy(
+                    streakStart = Date()
+                )
+                songDao.updateSongHistory(newHistory)
+
+                _notifyUpdate.value = Unit
+                return@launch
+            }
+
+            val lastPlayed = latestHistory.lastPlayed!!.toInstant()
+            val daysBetween = ChronoUnit.DAYS.between(lastPlayed, nowInstant)
+
+            if (daysBetween > 1) {
+                // update
+                val newHistory = latestHistory.copy(
+                    streakStart = Date()
+                )
+                songDao.updateSongHistory(newHistory)
+
+                _notifyUpdate.value = Unit
+            }
+        }
     }
 }

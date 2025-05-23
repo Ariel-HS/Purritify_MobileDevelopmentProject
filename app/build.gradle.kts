@@ -45,6 +45,7 @@ dependencies {
     implementation(libs.androidx.palette.ktx)
     implementation(libs.glide)
     implementation(libs.androidx.palette)
+    implementation(libs.androidx.legacy.support.v4)
     ksp(libs.androidx.room.compiler)
     annotationProcessor(libs.androidx.room.compiler)
     implementation(libs.androidx.core.ktx)
@@ -73,3 +74,9 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
+
+//configurations.all {
+//    resolutionStrategy {
+//        force(libs.androidx.lifecycle.common)
+//    }
+//}

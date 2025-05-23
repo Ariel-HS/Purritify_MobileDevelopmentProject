@@ -8,85 +8,127 @@
     tools:context=".ProfileFragment"
     android:background="#000000">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScrollView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:padding="16dp">
+        app:layout_constraintBottom_toTopOf="@id/miniPlayer"
+        >
 
-        <!-- Profile Card -->
-        <FrameLayout
-            android:id="@+id/profileCardContainer"
-            android:layout_width="122dp"
-            android:layout_height="175dp"
-            android:layout_marginTop="70dp"
-
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <!-- Edit Profile Button -->
-        <Button
-            android:id="@+id/editProfileButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/edit_profile"
-            android:textSize="12sp"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
-            android:backgroundTint="#3E3F3F"
-            android:layout_marginTop="12dp"
-            android:paddingHorizontal="24dp"
-            android:layout_gravity="center_horizontal"
-            android:minHeight="38dp"
-
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/profileCardContainer" />
-
-        <!-- Statistics -->
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/profileStatisticsContainer"
+            android:id="@+id/mainContainer"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:layout_marginTop="16dp"
-            android:paddingHorizontal="12dp"
+            android:layout_height="wrap_content">
 
-            app:layout_constraintTop_toBottomOf="@id/editProfileButton"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <!-- Songs -->
-            <FrameLayout
-                android:id="@+id/profileSongsStatistics"
-                android:layout_width="63.13dp"
-                android:layout_height="41.65dp"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/profileTopContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
+                app:layout_constraintTop_toTopOf="parent">
 
-            <!-- Liked -->
-            <FrameLayout
-                android:id="@+id/profileLikedStatistics"
-                android:layout_width="63.13dp"
-                android:layout_height="41.65dp"
-                app:layout_constraintStart_toEndOf="@id/profileSongsStatistics"
-                app:layout_constraintEnd_toStartOf="@id/profileListenedStatistics"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
+                <!-- Profile Card -->
+                <FrameLayout
+                    android:id="@+id/profileCardContainer"
+                    android:layout_width="122dp"
+                    android:layout_height="175dp"
+                    android:layout_marginTop="70dp"
 
-            <!-- Listened -->
-            <FrameLayout
-                android:id="@+id/profileListenedStatistics"
-                android:layout_width="63.13dp"
-                android:layout_height="41.65dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <!-- Edit Profile Button -->
+                <Button
+                    android:id="@+id/editProfileButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="12dp"
+                    android:backgroundTint="#3E3F3F"
+                    android:minHeight="48dp"
+                    android:paddingHorizontal="24dp"
+                    android:text="@string/edit_profile"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/profileCardContainer" />
+
+                <!-- Statistics -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/profileStatisticsContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:layout_marginTop="16dp"
+                    android:paddingHorizontal="12dp"
+
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/editProfileButton">
+
+                    <!-- Songs -->
+                    <FrameLayout
+                        android:id="@+id/profileSongsStatistics"
+                        android:layout_width="63.13dp"
+                        android:layout_height="41.65dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <!-- Liked -->
+                    <FrameLayout
+                        android:id="@+id/profileLikedStatistics"
+                        android:layout_width="63.13dp"
+                        android:layout_height="41.65dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/profileListenedStatistics"
+                        app:layout_constraintStart_toEndOf="@id/profileSongsStatistics"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <!-- Listened -->
+                    <FrameLayout
+                        android:id="@+id/profileListenedStatistics"
+                        android:layout_width="63.13dp"
+                        android:layout_height="41.65dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <TextView
+                android:id="@+id/soundCapsuleTitle"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:paddingHorizontal="16dp"
+                android:text="@string/sound_capsule_title"
+                android:textColor="@color/white"
+                android:textSize="22sp"
+                android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/profileTopContainer" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/soundCapsuleRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:contentDescription="@string/sound_capsule"
+                app:layout_constraintBottom_toTopOf="@id/miniPlayer"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/soundCapsuleTitle" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
 
     <!-- Mini Player -->
     <com.example.purritify.ui.player.MiniplayerView

@@ -19,7 +19,10 @@ data class Song(
     override val id: Int = 0,
 
     val lastPlayed: Date? = null,
-    val uploadDate: Date
+    val uploadDate: Date,
+
+    val streakStart: Date? = null,
+    val timeListened: Int = 0,
 ) : PlayableSong {
 //    override val isOnline: Boolean = false
 }
