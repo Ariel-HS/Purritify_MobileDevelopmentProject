@@ -7,16 +7,13 @@
     android:id="@+id/home_drawer_layout"
     tools:context=".HomeFragment"
     android:background="#121212"
-    android:fitsSystemWindows="true"
-    >
-<!--    tools:openDrawer="start"-->
+    android:fitsSystemWindows="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingHorizontal="16dp"
-        android:paddingTop="32dp"
-        >
+        android:paddingTop="32dp">
 
         <include
             android:id="@+id/home_toolbar"
@@ -25,135 +22,156 @@
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent" />
 
-        </include>
-
-        <LinearLayout
-            android:id="@+id/home_frame_layout"
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_height="0dp"
+            android:fillViewport="true"
+            app:layout_constraintBottom_toTopOf="@+id/miniPlayer"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/home_toolbar"
-            android:orientation="vertical"
-            android:paddingTop="60dp"
-            android:paddingHorizontal="18dp"
-            >
-
-            <TextView
-                android:id="@+id/home_new_songs_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/chart"
-                android:textColor="@android:color/white"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:layout_gravity="top" />
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="6dp"
-                android:orientation="horizontal"
-                >
-
-                <ImageButton
-                    android:id="@+id/globalChart"
-                    android:layout_width="132dp"
-                    android:layout_height="132dp"
-                    android:src="@drawable/chart_global_cover"
-                    android:scaleType="fitCenter"
-                    android:background="@android:color/transparent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    android:contentDescription="@string/global_chart"
-                    />
-
-                <ImageButton
-                    android:id="@+id/localChart"
-                    android:layout_width="132dp"
-                    android:layout_height="132dp"
-                    android:contentDescription="@string/global_chart"
-                    android:src="@drawable/chart_local_cover"
-                    android:scaleType="fitCenter"
-                    android:background="@android:color/transparent"
-                    app:layout_constraintStart_toEndOf="@+id/globalChart"
-                    app:layout_constraintTop_toTopOf="parent"
-                    android:layout_marginStart="@dimen/view_margin"
-                    />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-<!--            New Songs-->
-
-            <TextView
-                android:id="@+id/home_new_songs_text2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="top"
-                android:text="@string/new_songs"
-                android:textColor="@android:color/white"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="6dp"
-                />
-
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="132dp"
-                android:scrollbars="none"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="6dp"
-                android:descendantFocusability="afterDescendants"
-                android:contentDescription="@string/home_horizontal_scroll_view">
-
-                <LinearLayout
-                    android:id="@+id/new_song_container"
-                    android:layout_width="wrap_content"
-                    android:layout_height="132dp"
-                    android:orientation="horizontal" />
-            </HorizontalScrollView>
-
-<!--            Recently Played-->
-
-            <TextView
-                android:id="@+id/home_recently_played_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/recently_played"
-                android:textColor="@android:color/white"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:layout_gravity="top"
-                android:layout_marginTop="20dp" />
+            app:layout_constraintTop_toBottomOf="@+id/home_toolbar">
 
             <LinearLayout
-                android:id="@+id/recently_played_container"
+                android:id="@+id/home_frame_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginTop="14dp"
-                android:layout_marginBottom="24dp"
-                android:paddingStart="-16dp"
-                android:paddingEnd="-16dp" />
+                android:paddingTop="60dp"
+                android:paddingHorizontal="18dp"
+                android:paddingBottom="24dp">
 
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/home_new_songs_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/chart"
+                    android:textColor="@android:color/white"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:layout_gravity="top" />
 
-        <!-- Mini Player -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginBottom="6dp"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:id="@+id/globalChart"
+                        android:layout_width="132dp"
+                        android:layout_height="132dp"
+                        android:src="@drawable/chart_global_cover"
+                        android:scaleType="fitCenter"
+                        android:background="@android:color/transparent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:contentDescription="@string/global_chart" />
+
+                    <ImageButton
+                        android:id="@+id/localChart"
+                        android:layout_width="132dp"
+                        android:layout_height="132dp"
+                        android:contentDescription="@string/global_chart"
+                        android:src="@drawable/chart_local_cover"
+                        android:scaleType="fitCenter"
+                        android:background="@android:color/transparent"
+                        app:layout_constraintStart_toEndOf="@+id/globalChart"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:layout_marginStart="@dimen/view_margin" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <TextView
+                    android:id="@+id/home_new_songs_text2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top"
+                    android:text="@string/new_songs"
+                    android:textColor="@android:color/white"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginBottom="6dp" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="132dp"
+                    android:scrollbars="none"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginBottom="6dp"
+                    android:descendantFocusability="afterDescendants"
+                    android:contentDescription="@string/home_horizontal_scroll_view">
+
+                    <LinearLayout
+                        android:id="@+id/new_song_container"
+                        android:layout_width="wrap_content"
+                        android:layout_height="132dp"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
+
+                <TextView
+                    android:id="@+id/home_recommendations_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top"
+                    android:text="@string/recommended_for_you"
+                    android:textColor="@android:color/white"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginBottom="6dp" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="132dp"
+                    android:scrollbars="none"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginBottom="6dp"
+                    android:descendantFocusability="afterDescendants"
+                    android:contentDescription="@string/recommendation_scroll_view">
+
+                    <LinearLayout
+                        android:id="@+id/recommendations_container"
+                        android:layout_width="wrap_content"
+                        android:layout_height="132dp"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
+
+                <TextView
+                    android:id="@+id/home_recently_played_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/recently_played"
+                    android:textColor="@android:color/white"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:layout_gravity="top"
+                    android:layout_marginTop="20dp" />
+
+                <LinearLayout
+                    android:id="@+id/recently_played_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="14dp"
+                    android:layout_marginBottom="24dp"
+                    android:paddingStart="-16dp"
+                    android:paddingEnd="-16dp" />
+
+            </LinearLayout>
+        </ScrollView>
+
         <com.example.purritify.ui.player.MiniplayerView
             android:id="@+id/miniPlayer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"
-
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            />
+            app:layout_constraintBottom_toBottomOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -165,6 +183,5 @@
         app:headerLayout="@layout/home_nav_header"
         app:menu="@menu/home_side_nav"
         android:background="#121212"
-        app:itemTextColor="@color/white"
-        />
+        app:itemTextColor="@color/white" />
 </androidx.drawerlayout.widget.DrawerLayout>

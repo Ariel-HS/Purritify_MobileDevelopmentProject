@@ -36,6 +36,10 @@ import com.example.purritify.ui.player.MiniplayerView
 import com.example.purritify.ui.player.PlayerViewModel
 import kotlinx.coroutines.launch
 import androidx.core.graphics.drawable.toDrawable
+import com.example.purritify.data.model.ChartSong
+import com.example.purritify.retrofit.RetrofitClient
+import com.example.purritify.ui.recommendation.RecommendationViewModel
+import com.example.purritify.ui.recommendation.RecommendationViewModelFactory
 
 class HomeFragment : Fragment() {
 
@@ -49,6 +53,7 @@ class HomeFragment : Fragment() {
     private var newSongs: List<Song> = emptyList()
     private var recentlyPlayedSongs: List<Song> = emptyList()
     private var allSongs: List<PlayableSong> = emptyList()
+    private lateinit var recommendationViewModel: RecommendationViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -128,6 +133,33 @@ class HomeFragment : Fragment() {
         }
 
         setupOnClickListener()
+
+        recommendationViewModel = ViewModelProvider(
+            this,
+            RecommendationViewModelFactory(songDatabase.songDao, userEmail)
+        )[RecommendationViewModel::class.java]
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val token = TokenManager.getInstance(requireContext()).getToken()
+                if (token != null) {
+                    val api = RetrofitClient.getInstance().getMyApi()
+                    val profile = api.fetchProfileSuspend("Bearer $token")
+                    val countryCode = profile.location
+
+                    recommendationViewModel.loadRecommendations(countryCode)
+                }
+            } catch (e: Exception) {
+                Log.e("HomeFragment", "Failed to get country code: ${e.message}", e)
+                recommendationViewModel.loadRecommendations("US")
+            }
+        }
+
+        recommendationViewModel.recommendations.observe(viewLifecycleOwner) { recommendations ->
+            if (recommendations.isNotEmpty()) {
+                loadRecommendations(recommendations)
+            }
+        }
     }
 
     private fun logout() {
@@ -297,5 +329,57 @@ class HomeFragment : Fragment() {
     companion object {
         private const val REQUEST_CODE_QR_SCAN = 101
         const val REQUEST_CODE_CAMERA_PERMISSION = 1002
+    }
+
+    private fun loadRecommendations(recommendations: List<PlayableSong>) {
+        val density = resources.displayMetrics.density
+
+        val params = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            marginEnd = (18 * density).toInt()
+        }
+
+        val inflater = LayoutInflater.from(requireContext())
+        val container = binding.recommendationsContainer
+        container.removeAllViews()
+
+        for (song in recommendations) {
+            val songView = inflater.inflate(R.layout.song_card, container, false)
+
+            val cover = songView.findViewById<ImageView>(R.id.songArtwork)
+            val title = songView.findViewById<TextView>(R.id.songTitle)
+            val artist = songView.findViewById<TextView>(R.id.songArtist)
+
+            title.text = song.title
+            artist.text = song.artist
+
+            when (song) {
+                is Song -> loadCover(song.pathArtwork, cover)
+                is ChartSong -> {
+                    Glide.with(requireContext())
+                        .load(song.artwork)
+                        .into(cover)
+                }
+            }
+
+            songView.setOnClickListener {
+                val mode = when (song) {
+                    is Song -> "offline"
+                    is ChartSong -> "global"
+                    else -> "offline"
+                }
+
+                val action = HomeFragmentDirections.actionHomeToPlayer(
+                    songId = song.id,
+                    mode = mode
+                )
+                findNavController().navigate(action)
+            }
+
+            songView.layoutParams = params
+            container.addView(songView)
+        }
     }
 }
