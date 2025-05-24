@@ -28,7 +28,6 @@ import java.text.SimpleDateFormat
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Locale
-import kotlin.coroutines.coroutineContext
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -55,6 +54,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private var currentPlaylist: List<PlayableSong> = emptyList()
     private var currentPlaylistIndex: Int = -1
     private var currentMode: String = "offline"
+    fun getMode(): String { return currentMode; }
 
     private val updateRunnable = object : Runnable {
         override fun run() {
@@ -140,6 +140,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun setCurrentSong(song: PlayableSong, mode: String = "offline") {
+        Log.d("PlayerViewModel", "Playing song, current mode: $mode")
         _currentSong.value = song
         currentMode = mode
         updateMediaService(song, mode)

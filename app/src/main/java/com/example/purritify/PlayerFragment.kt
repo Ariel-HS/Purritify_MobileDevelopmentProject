@@ -96,10 +96,16 @@ class PlayerFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Init ViewModel
+        playerViewModel = ViewModelProvider(requireActivity())[PlayerViewModel::class.java]
+
         // Get arguments
         fromMiniplayer = args.fromMiniplayer
         mode = args.mode
         songId = args.songId
+
+        // Set mode
+        if (fromMiniplayer && mode == "offline") { mode = playerViewModel.getMode() }
 
         Log.d("PlayerFragment", "${fromMiniplayer}, ${mode}, ${songId}")
 
@@ -116,9 +122,6 @@ class PlayerFragment : Fragment() {
 
             return
         }
-
-        // Init ViewModel
-        playerViewModel = ViewModelProvider(requireActivity())[PlayerViewModel::class.java]
 
         if (mode == "offline") {
 
@@ -278,9 +281,17 @@ class PlayerFragment : Fragment() {
             binding.songDurationAt.text = handleTime(it)
         }
 
-        // remove like button if online & enable  sharing
+        // remove like button if online & enable sharing & disable next / prev button for deeplink
         if (mode != "offline") {
             binding.heartButton.visibility = View.GONE
+
+            if (mode == "deepLink" ) {
+                val prevButton = binding.prevButton
+                val nextButton = binding.nextButton
+
+                prevButton.visibility = View.GONE
+                nextButton.visibility = View.GONE
+            }
 
             val shareButton = binding.shareButton
 
