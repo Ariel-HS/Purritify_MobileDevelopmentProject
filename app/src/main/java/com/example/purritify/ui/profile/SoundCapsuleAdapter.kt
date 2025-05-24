@@ -43,7 +43,7 @@ class SoundCapsuleAdapter(
                 Log.d("CapsuleAdapter", stats.toString())
                 artistName.text = stats.topArtist.artist
 
-                topSong.text = stats.topSong.title
+                songName.text = stats.topSong.title
                 try {
                     songArtwork.setImageURI(stats.topSong.pathArtwork.toUri())
                 } catch (e: Exception) {

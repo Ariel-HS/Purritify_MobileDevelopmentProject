@@ -81,6 +81,7 @@ class SongViewModel(
             }
             is SongEvent.UpsertSong -> {
                 viewModelScope.launch {
+                    Log.d("SongViewModel UpsertSong", event.song.toString())
                     dao.upsertSong(event.song)
                 }
             }

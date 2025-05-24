@@ -1,5 +1,6 @@
 package com.example.purritify.data.room
 
+import android.util.Log
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -128,37 +129,62 @@ interface SongDao {
 
     @Transaction
     suspend fun upsertSong(song: Song) {
+        Log.d("SongDao UpsertSong", song.toString())
         val songId = upsertSongHelper(song).toInt()
+        Log.d("SongDao SongId", songId.toString())
 
         val formatter = SimpleDateFormat("MM-yyyy", Locale.US)
         val now = formatter.format(Date())
+        Log.d("SongDao Month", now)
 
-        // TODO check if need to update every month or just 'now' month
-        val songExist = getSongHistoryByMonth(songId, now)
+        if (songId == -1) { // Song already exist (update)
+            // TODO check if need to update every month or just 'now' month
+            val songExist = getSongHistoryByMonth(song.id, now)
+            Log.d("SongDao SongExist", songExist.toString())
 
-        if (songExist == null) {
-            val newHistory = SongHistory(
-                title = song.title,
-                artist = song.artist,
-                pathArtwork = song.pathArtwork,
-                userEmail = song.userEmail,
-                id = songId,
-                month = now,
-                streakStart = song.streakStart,
-                lastPlayed = song.lastPlayed,
-                timeListened = 0
-            )
-            insertSongHistory(newHistory)
-        } else {
-            val updated = songExist.copy(
-                title = song.title,
-                artist = song.artist,
-                pathArtwork = song.pathArtwork,
-                userEmail = song.userEmail,
-                lastPlayed = song.lastPlayed
-            )
-            updateSongHistory(updated)
+            if (songExist == null) { // no song yet this month
+                val newHistory = SongHistory(
+                    title = song.title,
+                    artist = song.artist,
+                    pathArtwork = song.pathArtwork,
+                    userEmail = song.userEmail,
+                    id = song.id,
+                    month = now,
+                    streakStart = song.streakStart,
+                    lastPlayed = song.lastPlayed,
+                    timeListened = 0
+                )
+                Log.d("SongDao No Song This Month", newHistory.toString())
+                insertSongHistory(newHistory)
+            } else {
+                val updated = songExist.copy(
+                    title = song.title,
+                    artist = song.artist,
+                    pathArtwork = song.pathArtwork,
+                    userEmail = song.userEmail,
+                    lastPlayed = song.lastPlayed
+                )
+                Log.d("SongDao Update Song This Month", updated.toString())
+                updateSongHistory(updated)
+            }
+
+            return
         }
+
+        // song doesnt exist, Insert
+        val newHistory = SongHistory(
+            title = song.title,
+            artist = song.artist,
+            pathArtwork = song.pathArtwork,
+            userEmail = song.userEmail,
+            id = songId,
+            month = now,
+            streakStart = song.streakStart,
+            lastPlayed = song.lastPlayed,
+            timeListened = 0
+        )
+        Log.d("SongDao Song Not Exist", newHistory.toString())
+        insertSongHistory(newHistory)
     }
 
     @Delete

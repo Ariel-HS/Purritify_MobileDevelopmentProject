@@ -26,7 +26,7 @@ data class SongHistory(
     val pathArtwork: String,
     val userEmail: String,
 
-    val id: Int = 0,
+    val id: Int,
     val month: String,
 
     val streakStart: Date? = null,
