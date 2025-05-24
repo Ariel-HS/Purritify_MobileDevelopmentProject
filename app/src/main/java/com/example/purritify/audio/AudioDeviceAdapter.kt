@@ -44,7 +44,6 @@ class AudioDeviceAdapter(
             }
             deviceSelected.isChecked = device.isActive
 
-            // Set the icon based on device type
             val iconResource = when (device.type) {
                 AudioDeviceType.BLUETOOTH_A2DP,
                 AudioDeviceType.BLUETOOTH_HEADSET -> R.drawable.audio_output // Use the same icon for now

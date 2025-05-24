@@ -181,7 +181,6 @@ class PlayerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Request Bluetooth permissions
         checkBluetoothPermissions()
 
         // Handle close button
@@ -475,7 +474,6 @@ class PlayerFragment : Fragment() {
 
     private fun showAudioDeviceDialog() {
         AudioDeviceDialog(audioDeviceManager) { device ->
-            // Handle device selection
             Toast.makeText(
                 requireContext(),
                 "Audio output switched to ${device.name}",

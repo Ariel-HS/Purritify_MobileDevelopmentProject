@@ -40,20 +40,16 @@ class MediaPlayerService : Service() {
         const val CHANNEL_ID = "PurrytifyMediaChannel"
         const val NOTIFICATION_ID = 1
 
-        // Action constants for notification controls
         const val ACTION_PLAY_PAUSE = "com.example.purritify.PLAY_PAUSE"
         const val ACTION_NEXT = "com.example.purritify.NEXT"
         const val ACTION_PREVIOUS = "com.example.purritify.PREVIOUS"
         const val ACTION_STOP = "com.example.purritify.STOP"
 
-        // Broadcast actions for updating UI
         const val BROADCAST_PLAYBACK_STATE_CHANGED = "com.example.purritify.PLAYBACK_STATE_CHANGED"
         const val BROADCAST_CURRENT_SONG_CHANGED = "com.example.purritify.CURRENT_SONG_CHANGED"
 
-        // Action for app closed
         const val ACTION_APP_CLOSED = "com.example.purritify.APP_CLOSED"
 
-        // Flag to track service state
         var isServiceRunning = false
     }
 
@@ -93,7 +89,7 @@ class MediaPlayerService : Service() {
 
     private var currentPosition = 0
     private var duration = 0
-    private val updateIntervalMs = 1000L // Update progress every second
+    private val updateIntervalMs = 1000L // Update progress interval
     private val handler = Handler(Looper.getMainLooper())
 
     private val updateProgressRunnable = object : Runnable {
@@ -195,7 +191,6 @@ class MediaPlayerService : Service() {
                     }
 
                     override fun onLoadCleared(placeholder: Drawable?) {
-                        // Use default artwork
                         artworkBitmap = ContextCompat.getDrawable(
                             this@MediaPlayerService,
                             R.drawable.sample_cover

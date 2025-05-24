@@ -38,7 +38,6 @@ class AudioDeviceDialog(
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 
-        // Observe the device list
         audioDeviceManager.audioDevices.observe(this) { devices ->
             adapter.submitList(devices)
 
@@ -53,7 +52,6 @@ class AudioDeviceDialog(
             loadingIndicator.visibility = View.GONE
         }
 
-        // Refresh devices when the dialog is shown
         loadingIndicator.visibility = View.VISIBLE
         audioDeviceManager.refreshAudioDevices()
 

@@ -185,7 +185,6 @@ class AudioDeviceManager(private val context: Context) {
                 Log.e(TAG, "Security exception accessing Bluetooth devices: ${e.message}")
             }
         } else if (!hasBluetoothPermission && btEnabled) {
-            // Add a dummy Bluetooth device entry if we know Bluetooth is enabled but we don't have permission
             devices.add(AudioDevice(
                 id = "bluetooth_permission_needed",
                 name = context.getString(R.string.bluetooth_permission_needed),
@@ -195,9 +194,7 @@ class AudioDeviceManager(private val context: Context) {
             ))
         }
 
-        // Only set default active device if none is currently active
         if (_activeDevice.value == null && devices.isNotEmpty()) {
-            // Set the first device as active by default
             devices[0].isActive = true
             _activeDevice.postValue(devices[0])
         }
@@ -209,7 +206,6 @@ class AudioDeviceManager(private val context: Context) {
         if (!hasBluetoothPermission) return false
 
         try {
-            // For simplicity, assume paired devices are connected.
             return device.bondState == BluetoothDevice.BOND_BONDED
         } catch (e: SecurityException) {
             Log.e(TAG, "Security exception checking Bluetooth connection: ${e.message}")
@@ -243,9 +239,7 @@ class AudioDeviceManager(private val context: Context) {
         Log.d(TAG, "Attempting to route audio to: ${device.name} (${device.type})")
 
         try {
-            // First, handle any active Bluetooth SCO connection
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                // For pre-Android 12, we need to stop SCO explicitly
                 @Suppress("DEPRECATION")
                 if (audioManager.isBluetoothScoOn) {
                     @Suppress("DEPRECATION")
@@ -255,7 +249,6 @@ class AudioDeviceManager(private val context: Context) {
                 }
             }
 
-            // Reset audio mode and speaker state first
             audioManager.mode = AudioManager.MODE_NORMAL
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
                 @Suppress("DEPRECATION")
@@ -266,6 +259,8 @@ class AudioDeviceManager(private val context: Context) {
 
             when (device.type) {
                 AudioDeviceType.INTERNAL_SPEAKER -> {
+                    audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
+
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         val speakerDevice = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
                             .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
@@ -275,15 +270,18 @@ class AudioDeviceManager(private val context: Context) {
                             Log.d(TAG, "Setting speaker as communication device: $success")
                         } ?: Log.e(TAG, "No built-in speaker found")
                     } else {
-                        audioManager.mode = AudioManager.MODE_NORMAL
                         @Suppress("DEPRECATION")
                         audioManager.isSpeakerphoneOn = true
                     }
-                    Log.d(TAG, "Audio routed to internal speaker")
+
+                    requestAudioFocus()
+                    Log.d(TAG, "Audio forcefully routed to internal speaker")
                 }
 
                 AudioDeviceType.WIRED_HEADSET -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        audioManager.clearCommunicationDevice()
+
                         val wiredHeadsetDevice = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
                             .firstOrNull {
                                 it.type == AudioDeviceInfo.TYPE_WIRED_HEADSET ||
@@ -291,12 +289,20 @@ class AudioDeviceManager(private val context: Context) {
                             }
 
                         wiredHeadsetDevice?.let {
+                            audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
                             val success = audioManager.setCommunicationDevice(it)
                             Log.d(TAG, "Setting wired headset as communication device: $success")
                         } ?: Log.e(TAG, "No wired headset found")
+                    } else {
+                        @Suppress("DEPRECATION")
+                        if (audioManager.isBluetoothScoOn) {
+                            @Suppress("DEPRECATION")
+                            audioManager.stopBluetoothSco()
+                            audioManager.isBluetoothScoOn = false
+                        }
+
+                        audioManager.mode = AudioManager.MODE_NORMAL
                     }
-                    // For pre-Android 12, wired headsets typically become the default route
-                    // when connected, so we just need to ensure speaker is off
 
                     requestAudioFocus()
                     Log.d(TAG, "Audio routed to wired headset")
@@ -304,18 +310,15 @@ class AudioDeviceManager(private val context: Context) {
 
                 AudioDeviceType.BLUETOOTH_HEADSET -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        // For Android 12+, use communication device API for BT SCO
                         val bluetoothScoDevice = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
                             .firstOrNull { it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO }
 
                         if (bluetoothScoDevice != null) {
-                            // Set audio mode before setting communication device
                             audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
                             val success = audioManager.setCommunicationDevice(bluetoothScoDevice)
                             Log.d(TAG, "Setting Bluetooth SCO as communication device: $success")
                         } else {
                             Log.e(TAG, "No Bluetooth SCO device found")
-                            // Try to find and use A2DP device as fallback
                             val a2dpDevice = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
                                 .firstOrNull { it.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP }
 
@@ -325,7 +328,6 @@ class AudioDeviceManager(private val context: Context) {
                             }
                         }
                     } else {
-                        // For pre-Android 12, use the legacy SCO API
                         audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
                         @Suppress("DEPRECATION")
                         audioManager.startBluetoothSco()
@@ -349,14 +351,12 @@ class AudioDeviceManager(private val context: Context) {
                             Log.e(TAG, "No Bluetooth A2DP device found")
                         }
                     }
-                    // For pre-Android 12, A2DP should be automatically selected if available
 
                     requestAudioFocus()
                     Log.d(TAG, "Audio routed to Bluetooth A2DP device")
                 }
 
                 else -> {
-                    // Default to speaker for unknown device types
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         val speakerDevice = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
                             .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
@@ -385,9 +385,7 @@ class AudioDeviceManager(private val context: Context) {
 
         audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
             .setAudioAttributes(audioAttributes)
-            .setOnAudioFocusChangeListener {
-                // Handle audio focus changes
-            }
+            .setOnAudioFocusChangeListener {}
             .build()
 
         val result = audioManager.requestAudioFocus(audioFocusRequest!!)
@@ -438,7 +436,6 @@ class AudioDeviceManager(private val context: Context) {
         }
 
         try {
-            // Reset audio routing
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 audioManager.clearCommunicationDevice()
             } else {
