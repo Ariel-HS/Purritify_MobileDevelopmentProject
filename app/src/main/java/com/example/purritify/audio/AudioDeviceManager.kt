@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothClass
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothProfile
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -103,6 +102,7 @@ class AudioDeviceManager(private val context: Context) {
         val devices = mutableListOf<AudioDevice>()
 
         val currentActiveId = _activeDevice.value?.id
+        Log.d(TAG, "Current active device ID: $currentActiveId")
 
         devices.add(AudioDevice(
             id = "internal_speaker",
@@ -130,11 +130,12 @@ class AudioDeviceManager(private val context: Context) {
 
         val btAdapter = bluetoothAdapter
         val btEnabled = btAdapter != null && btAdapter.isEnabled
+        Log.d(TAG, "is bluetooth enabled: $btEnabled")
 
         if (hasBluetoothPermission && btEnabled) {
             try {
                 val pairedDevices = btAdapter!!.bondedDevices ?: emptySet()
-                Log.d(TAG, "pairedDevices number: ${pairedDevices.size}")
+                Log.d(TAG, "number of pairedDevices: ${pairedDevices.size}")
 
                 for (device in pairedDevices) {
                     try {
@@ -242,67 +243,131 @@ class AudioDeviceManager(private val context: Context) {
         Log.d(TAG, "Attempting to route audio to: ${device.name} (${device.type})")
 
         try {
+            // First, handle any active Bluetooth SCO connection
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                // For pre-Android 12, we need to stop SCO explicitly
+                @Suppress("DEPRECATION")
+                if (audioManager.isBluetoothScoOn) {
+                    @Suppress("DEPRECATION")
+                    audioManager.stopBluetoothSco()
+                    audioManager.isBluetoothScoOn = false
+                    Log.d(TAG, "Stopped existing Bluetooth SCO connection")
+                }
+            }
+
+            // Reset audio mode and speaker state first
+            audioManager.mode = AudioManager.MODE_NORMAL
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                @Suppress("DEPRECATION")
+                audioManager.isSpeakerphoneOn = false
+            } else {
+                audioManager.clearCommunicationDevice()
+            }
+
             when (device.type) {
                 AudioDeviceType.INTERNAL_SPEAKER -> {
-                    audioManager.isSpeakerphoneOn = true
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        val speakerDevice = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                            .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
 
-                    if (audioManager.isBluetoothScoOn) {
-                        audioManager.isBluetoothScoOn = false
-                        audioManager.stopBluetoothSco()
+                        speakerDevice?.let {
+                            val success = audioManager.setCommunicationDevice(it)
+                            Log.d(TAG, "Setting speaker as communication device: $success")
+                        } ?: Log.e(TAG, "No built-in speaker found")
+                    } else {
+                        audioManager.mode = AudioManager.MODE_NORMAL
+                        @Suppress("DEPRECATION")
+                        audioManager.isSpeakerphoneOn = true
                     }
-
-                    audioManager.mode = AudioManager.MODE_NORMAL
-
                     Log.d(TAG, "Audio routed to internal speaker")
                 }
 
                 AudioDeviceType.WIRED_HEADSET -> {
-                    audioManager.isSpeakerphoneOn = false
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        val wiredHeadsetDevice = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                            .firstOrNull {
+                                it.type == AudioDeviceInfo.TYPE_WIRED_HEADSET ||
+                                        it.type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES
+                            }
 
-                    if (audioManager.isBluetoothScoOn) {
-                        audioManager.isBluetoothScoOn = false
-                        audioManager.stopBluetoothSco()
+                        wiredHeadsetDevice?.let {
+                            val success = audioManager.setCommunicationDevice(it)
+                            Log.d(TAG, "Setting wired headset as communication device: $success")
+                        } ?: Log.e(TAG, "No wired headset found")
                     }
-
-                    audioManager.mode = AudioManager.MODE_NORMAL
-
-                    audioManager.setWiredHeadsetOn(true)
+                    // For pre-Android 12, wired headsets typically become the default route
+                    // when connected, so we just need to ensure speaker is off
 
                     requestAudioFocus()
-
                     Log.d(TAG, "Audio routed to wired headset")
                 }
 
                 AudioDeviceType.BLUETOOTH_HEADSET -> {
-                    if (!audioManager.isBluetoothScoOn) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        // For Android 12+, use communication device API for BT SCO
+                        val bluetoothScoDevice = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                            .firstOrNull { it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO }
+
+                        if (bluetoothScoDevice != null) {
+                            // Set audio mode before setting communication device
+                            audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
+                            val success = audioManager.setCommunicationDevice(bluetoothScoDevice)
+                            Log.d(TAG, "Setting Bluetooth SCO as communication device: $success")
+                        } else {
+                            Log.e(TAG, "No Bluetooth SCO device found")
+                            // Try to find and use A2DP device as fallback
+                            val a2dpDevice = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                                .firstOrNull { it.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP }
+
+                            a2dpDevice?.let {
+                                val success = audioManager.setCommunicationDevice(it)
+                                Log.d(TAG, "Setting Bluetooth A2DP as fallback: $success")
+                            }
+                        }
+                    } else {
+                        // For pre-Android 12, use the legacy SCO API
                         audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
+                        @Suppress("DEPRECATION")
                         audioManager.startBluetoothSco()
                         audioManager.isBluetoothScoOn = true
+                        Log.d(TAG, "Started Bluetooth SCO connection (legacy)")
                     }
 
-                    audioManager.isSpeakerphoneOn = false
-
-                    Log.d(TAG, "Audio routed to Bluetooth headset (SCO)")
+                    requestAudioFocus()
+                    Log.d(TAG, "Audio routed to Bluetooth headset")
                 }
 
                 AudioDeviceType.BLUETOOTH_A2DP -> {
-                    audioManager.isSpeakerphoneOn = false
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        val bluetoothA2dpDevice = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                            .firstOrNull { it.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP }
 
-                    if (audioManager.isBluetoothScoOn) {
-                        audioManager.isBluetoothScoOn = false
-                        audioManager.stopBluetoothSco()
+                        if (bluetoothA2dpDevice != null) {
+                            val success = audioManager.setCommunicationDevice(bluetoothA2dpDevice)
+                            Log.d(TAG, "Setting Bluetooth A2DP as communication device: $success")
+                        } else {
+                            Log.e(TAG, "No Bluetooth A2DP device found")
+                        }
                     }
-
-                    audioManager.mode = AudioManager.MODE_NORMAL
+                    // For pre-Android 12, A2DP should be automatically selected if available
 
                     requestAudioFocus()
-
                     Log.d(TAG, "Audio routed to Bluetooth A2DP device")
                 }
 
                 else -> {
-                    audioManager.isSpeakerphoneOn = true
-                    audioManager.mode = AudioManager.MODE_NORMAL
+                    // Default to speaker for unknown device types
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        val speakerDevice = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                            .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
+
+                        speakerDevice?.let {
+                            audioManager.setCommunicationDevice(it)
+                        }
+                    } else {
+                        @Suppress("DEPRECATION")
+                        audioManager.isSpeakerphoneOn = true
+                    }
                     Log.d(TAG, "Audio defaulting to speaker (unknown device type)")
                 }
             }
@@ -373,11 +438,18 @@ class AudioDeviceManager(private val context: Context) {
         }
 
         try {
-            audioManager.isSpeakerphoneOn = false
-
-            if (audioManager.isBluetoothScoOn) {
-                audioManager.isBluetoothScoOn = false
-                audioManager.stopBluetoothSco()
+            // Reset audio routing
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                audioManager.clearCommunicationDevice()
+            } else {
+                @Suppress("DEPRECATION")
+                if (audioManager.isBluetoothScoOn) {
+                    @Suppress("DEPRECATION")
+                    audioManager.stopBluetoothSco()
+                    audioManager.isBluetoothScoOn = false
+                }
+                @Suppress("DEPRECATION")
+                audioManager.isSpeakerphoneOn = false
             }
 
             audioManager.mode = AudioManager.MODE_NORMAL
