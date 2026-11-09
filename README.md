@@ -1,7 +1,5 @@
-## Deskripsi Aplikasi
-Purritify adalah aplikasi pemutar lagu berbasis mobile. Pengguna dapat mengunggah lagu dan memainkannya di dalam aplikasi. Lagu yang telah diunggah dapat diubah judul, artis,
-maupun cover dan sumber lagunya. Aplikasi menyediakan fitur tampilan daftar lagu, termasuk tampilan New Songs dan Recently Played. Pengguna dapat menandakan lagu sebagai Liked
-Songs dan menyaring lagu berdasarkan lagu yang telah ditandainya. Aplikasi juga menyediakan fitur Login, termasuk background service dan network sensing.
+## Description
+Purritify is a mobile music player app. Users can upload songs and play them within the app. Uploaded songs can be edited by their title, artist, cover, and media source. The app features a playlist which displays New Songs and Recently Played Songs. Users can mark songs as "Liked Songs" and filter songs based on their likes. The app also offers a login feature, background service, and network sensing.
 
 ## Dependencies
 - KSP
@@ -12,11 +10,16 @@ Songs dan menyaring lagu berdasarkan lagu yang telah ditandainya. Aplikasi juga 
 - Palette
 
 ## Screenshot
-![Login](./screenshot/login.png)
+<p float="left">
+  <img src="./screenshot/login.png" width="24%" />
+  <img src="./screenshot/Home.png" width="24%" />
+  <img src="./screenshot/Library.png" width="24%" />
+  <img src="./screenshot/MediaPlayer.png" width="24%" />
+</p>
 
-## Pembagian Kerja 
-| Nama | NIM | Pembagian Kerja | Jam Kerja | 
+## Contributions
+| Name | NIM | Contributions | Hours | 
 |------------------------|--------------|---------------|---------|
-| Ariel Herfrison        | 13522002 | Login, Navbar, Library, Penambahan Lagu, Liked Songs | 30 jam |
-| Bastian H Suryapratama | 13522034 | Network Sensing, Background Service                  | 12 jam |
-| Diero Arga Purnama     | 13522056 | Home, Pemutaran Lagu, Profile, Background Service    | 24 jam |
+| Ariel Herfrison        | 13522002 | Login, Navbar, Library, Penambahan Lagu, Liked Songs | 30 |
+| Bastian H Suryapratama | 13522034 | Network Sensing, Background Service                  | 12 |
+| Diero Arga Purnama     | 13522056 | Home, Pemutaran Lagu, Profile, Background Service    | 24 |
